@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-annotate="off">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' file:; style-src 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' http://127.0.0.1:* http://localhost:*; worker-src 'self' blob:; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<title>__PAGE_TITLE__</title>
+<script>
+  try {
+    const saved = localStorage.getItem("code-review-theme");
+    if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+  } catch (_) {}
+</script>
+<style>
+/*__CSS__*/
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <path d="M4 7.5A3.5 3.5 0 0 1 7.5 4h17A3.5 3.5 0 0 1 28 7.5v13a3.5 3.5 0 0 1-3.5 3.5H14l-6.4 4.3A1 1 0 0 1 6 27.5V24H7.5A3.5 3.5 0 0 1 4 20.5v-13Z" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M10 11h12M10 15.5h8M10 20h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="23.5" cy="20" r="3.2" fill="currentColor"/>
+      </svg>
+      <span class="brand-word">Review</span>
+      <span class="brand-repo">/ <b id="brand-repo">repository</b></span>
+    </div>
+    <div class="topbar-center" id="topbar-center"></div>
+    <div class="topbar-actions">
+      <button class="tb-btn" id="annotate-btn" aria-pressed="false" title="Select code or a finding to add a note">
+        <span class="tb-dot"></span><span>Annotate</span>
+      </button>
+      <button class="tb-btn" id="notes-btn" title="Open review notes">
+        Notes <span class="tb-count" id="notes-count">0</span>
+      </button>
+      <button class="icon-btn" id="theme-btn" aria-label="Switch theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.5 8.5 0 1 0 10.2 10.2Z" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="icon-btn" id="help-btn" aria-label="How to review">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 1 1 3.4 2.3c-.8.35-1 .85-1 1.5v.3" stroke-linecap="round"/><circle cx="12" cy="17" r=".8" fill="currentColor" stroke="none"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="ide">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="workbench" id="main">
+      <div id="view">
+        <div class="loading">Loading review…</div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="statusbar" id="statusbar"></footer>
+</div>
+
+<div class="reload-bar" id="reload-bar" hidden>
+  <span>A new iteration is available.</span>
+  <button class="btn btn-sm" id="reload-btn">Reload</button>
+</div>
+
+<dialog class="dialog help-dialog" id="help-dialog">
+  <div class="dialog-head">
+    <div>
+      <div class="eyebrow">Review</div>
+      <h2>Read. Mark. Send.</h2>
+    </div>
+    <button class="icon-btn" data-close-dialog aria-label="Close help">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="dialog-body">
+    <ol class="help-list">
+      <li>Select a file in the left list.</li>
+      <li>Read the code and the agent note.</li>
+      <li>Click <b>Annotate</b>.</li>
+      <li>Click code or a finding. Write a note. Click <b>Queue note</b>.</li>
+      <li>Open <b>Notes</b>. Click <b>Send to agent</b>.</li>
+    </ol>
+    <p class="help-foot">The agent runs <code>wait</code>. It receives your notes. Its reply appears in Notes.</p>
+  </div>
+</dialog>
+
+<dialog class="dialog note-dialog" id="note-dialog">
+  <div class="dialog-head">
+    <div>
+      <div class="eyebrow">Review note</div>
+      <h2>Add note</h2>
+    </div>
+    <button class="icon-btn" data-close-note aria-label="Close note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="dialog-body">
+    <div class="note-anchor" id="note-anchor"></div>
+    <textarea id="note-text" rows="6" placeholder="What should the agent change?"></textarea>
+    <div class="dialog-actions">
+      <button class="btn" data-close-note>Cancel</button>
+      <button class="btn btn-primary" id="note-save">Queue note</button>
+    </div>
+  </div>
+</dialog>
+
+<aside class="notes-drawer" id="notes-drawer" hidden aria-label="Review notes"></aside>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="application/json" id="review-data"><!--__REVIEW_DATA__--></script>
+<script src="__DIFFS_VENDOR__"></script>
+<script type="module">
+/*__APP_JS__*/
+</script>
+</body>
+</html>

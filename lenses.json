@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "always": ["solid", "fowler"],
+  "alwaysExcludeLanguages": ["sql", "prisma"],
+  "lenses": {
+    "correctness": {
+      "label": "Correctness",
+      "color": "#ff6b5e",
+      "kind": "builtin",
+      "description": "Bugs, edge cases, broken contracts, unsafe state, and logic that does not do what it claims."
+    },
+    "security": {
+      "label": "Security",
+      "color": "#fb7185",
+      "kind": "builtin",
+      "description": "Trust boundaries, injection, authorization, secrets, unsafe deserialization, and data exposure."
+    },
+    "performance": {
+      "label": "Performance",
+      "color": "#fbbf24",
+      "kind": "builtin",
+      "description": "Hot-path cost, N+1 access, unnecessary work, memory growth, and blocking calls."
+    },
+    "database": {
+      "label": "Database",
+      "color": "#c084fc",
+      "kind": "skill",
+      "doc": "references/lenses/database.md",
+      "description": "Schema, migrations, query shape, transactions, indexes, locking, backfills, and data safety.",
+      "appliesTo": {
+        "globs": [
+          "**/*.sql",
+          "**/*.prisma",
+          "**/migrations/**",
+          "**/migration/**",
+          "**/db/**",
+          "**/database/**",
+          "**/repositories/**",
+          "**/repository/**",
+          "**/dao/**",
+          "**/alembic/**",
+          "**/drizzle/**",
+          "**/knex/**",
+          "**/sequelize/**",
+          "**/typeorm/**",
+          "**/orm/**",
+          "**/queries/**",
+          "**/schema.prisma"
+        ],
+        "pathKeywords": [
+          "migration",
+          "migrate",
+          "schema",
+          "prisma",
+          "drizzle",
+          "sequelize",
+          "typeorm",
+          "knex",
+          "alembic",
+          "flyway",
+          "liquibase",
+          "repository",
+          "dao",
+          "database",
+          "query",
+          "transaction"
+        ],
+        "contentPatterns": [
+          "\\b(SELECT|INSERT\\s+INTO|UPDATE\\s+[\\w.\"`]+\\s+SET|DELETE\\s+FROM|CREATE\\s+TABLE|ALTER\\s+TABLE|DROP\\s+TABLE|CREATE\\s+INDEX|JOIN\\s+[\\w.\"`]+)\\b",
+          "\\.(query|execute|raw|transaction)\\s*\\(",
+          "\\b(prisma|knex|sequelize|dataSource|entityManager|session|db|pool)\\.(query|execute|transaction|find|findMany|save|create|update|delete|raw)\\b",
+          "@(Entity|Column|ManyToOne|OneToMany|Transactional|Repository)\\b",
+          "\\b(BEGIN|COMMIT|ROLLBACK)\\s*(TRANSACTION|WORK)?\\b"
+        ]
+      }
+    },
+    "solid": {
+      "label": "SOLID",
+      "color": "#7dd3fc",
+      "kind": "skill",
+      "doc": "references/lenses/solid.md",
+      "description": "Single responsibility, open/closed, Liskov substitution, interface segregation, and dependency inversion."
+    },
+    "fowler": {
+      "label": "Fowler",
+      "color": "#f0abfc",
+      "kind": "skill",
+      "doc": "references/lenses/fowler.md",
+      "description": "Code smells and refactorings from Martin Fowler's Refactoring: long methods, duplication, feature envy, shotgun surgery, and more."
+    },
+    "api": {
+      "label": "API & contract",
+      "color": "#38bdf8",
+      "kind": "builtin",
+      "description": "Public interfaces, backward compatibility, error semantics, versioning, and request/response shape."
+    },
+    "testing": {
+      "label": "Testing",
+      "color": "#a78bfa",
+      "kind": "builtin",
+      "description": "Coverage of the changed behavior, meaningful assertions, determinism, and missing failure cases."
+    },
+    "docs": {
+      "label": "Docs",
+      "color": "#94a3b8",
+      "kind": "builtin",
+      "description": "Docs, comments, examples, and contracts that no longer match the code."
+    },
+    "style": {
+      "label": "Style",
+      "color": "#64748b",
+      "kind": "builtin",
+      "description": "Readability and local consistency. Use sparingly; formatters and linters own most of this."
+    }
+  }
+}

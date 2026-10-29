@@ -1,0 +1,2375 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-annotate="off">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' file:; style-src 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' http://127.0.0.1:* http://localhost:*; worker-src 'self' blob:; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Code review · code-review-demo-live · iteration 2</title>
+<script>
+  try {
+    const saved = localStorage.getItem("code-review-theme");
+    if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+  } catch (_) {}
+</script>
+<style>
+/* ============================================================
+   code-review — IDE review console
+   Compact, local-first, no external CSS.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+  color-scheme: dark;
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Cascadia Code", "Cascadia Mono", "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --bg: #0b0e14;
+  --panel: #11151d;
+  --panel-2: #151a23;
+  --panel-3: #1a202b;
+  --code-bg: #0c1017;
+  --line: #242b37;
+  --line-2: #323b4a;
+  --text: #dfe6f0;
+  --text-2: #bcc7d6;
+  --muted: #8995a7;
+  --faint: #5d6879;
+  --accent: #c8f45a;
+  --accent-ink: #101600;
+  --accent-soft: rgba(200, 244, 90, .09);
+  --green: #63e6a8;
+  --green-soft: rgba(99, 230, 168, .11);
+  --blue: #6ecbff;
+  --blue-soft: rgba(110, 203, 255, .10);
+  --purple: #c3a4ff;
+  --purple-soft: rgba(195, 164, 255, .10);
+  --orange: #ffb45c;
+  --orange-soft: rgba(255, 180, 92, .10);
+  --red: #ff7266;
+  --red-soft: rgba(255, 114, 102, .11);
+  --pink: #ff8fbc;
+  --pink-soft: rgba(255, 143, 188, .10);
+  --slate: #a4b1c3;
+  --shadow: 0 20px 60px rgba(0, 0, 0, .35);
+  --topbar: 46px;
+  --statusbar: 24px;
+  --sidebar: 248px;
+  --radius: 8px;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f2f0ea;
+  --panel: #fbfaf6;
+  --panel-2: #f4f1e9;
+  --panel-3: #ebe7dc;
+  --code-bg: #fbfaf7;
+  --line: #ddd8cc;
+  --line-2: #c9c2b3;
+  --text: #1c2430;
+  --text-2: #334050;
+  --muted: #657181;
+  --faint: #8a93a0;
+  --accent: #4d6a00;
+  --accent-ink: #f8ffe6;
+  --accent-soft: rgba(77, 106, 0, .09);
+  --green: #0c7c4e;
+  --green-soft: rgba(12, 124, 78, .09);
+  --blue: #0b6d98;
+  --blue-soft: rgba(11, 109, 152, .09);
+  --purple: #6942b5;
+  --purple-soft: rgba(105, 66, 181, .09);
+  --orange: #985800;
+  --orange-soft: rgba(152, 88, 0, .09);
+  --red: #b22920;
+  --red-soft: rgba(178, 41, 32, .09);
+  --pink: #a5205e;
+  --pink-soft: rgba(165, 32, 94, .09);
+  --slate: #52606f;
+  --shadow: 0 20px 50px rgba(40, 35, 20, .12);
+}
+
+html {
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  line-height: 1.45;
+}
+
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+p { margin: 0 0 .55em; }
+p:last-child { margin-bottom: 0; }
+h1, h2, h3, h4 { margin: 0; font-family: var(--font-display); font-weight: 620; letter-spacing: -.02em; line-height: 1.18; }
+ul, ol { margin: 0; padding: 0; }
+li { list-style: none; }
+code, pre, kbd { font-family: var(--font-mono); }
+code { font-size: .9em; }
+svg { display: block; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+::selection { background: color-mix(in srgb, var(--accent) 30%, transparent); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line-2); border: 3px solid var(--bg); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+.app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* --------------------------------------------------------------- topbar */
+.topbar {
+  flex: 0 0 var(--topbar);
+  height: var(--topbar);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  z-index: 30;
+}
+.brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.brand-mark { width: 22px; height: 22px; color: var(--accent); flex: 0 0 auto; }
+.brand-word {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+.brand-repo {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+.brand-repo b { color: var(--muted); font-weight: 600; }
+.topbar-center { display: flex; align-items: center; gap: 6px; flex: 1 1 auto; min-width: 0; overflow: hidden; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  white-space: nowrap;
+}
+.chip strong { color: var(--text-2); font-weight: 600; }
+.chip.accent { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 34%, var(--line)); background: var(--accent-soft); }
+.chip.green { color: var(--green); border-color: color-mix(in srgb, var(--green) 30%, var(--line)); background: var(--green-soft); }
+.chip.orange { color: var(--orange); border-color: color-mix(in srgb, var(--orange) 30%, var(--line)); background: var(--orange-soft); }
+.chip.red { color: var(--red); border-color: color-mix(in srgb, var(--red) 30%, var(--line)); background: var(--red-soft); }
+.chip.slate { color: var(--slate); }
+.agent-dot { width: 6px; height: 6px; border-radius: 99px; background: var(--faint); flex: 0 0 auto; }
+.agent-dot.is-waiting { background: var(--green); box-shadow: 0 0 8px color-mix(in srgb, var(--green) 55%, transparent); }
+.agent-dot.is-idle { background: var(--orange); }
+.agent-dot.is-offline { background: var(--faint); }
+
+.topbar-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; flex: 0 0 auto; }
+.icon-btn, .tb-btn {
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 11px;
+  padding: 0 9px;
+  transition: color .14s ease, border-color .14s ease, background .14s ease;
+}
+.icon-btn { width: 28px; padding: 0; justify-content: center; }
+.icon-btn:hover, .tb-btn:hover { color: var(--text); border-color: var(--line-2); background: var(--panel-3); }
+.tb-btn[aria-pressed="true"] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); background: var(--accent-soft); }
+.tb-dot { width: 5px; height: 5px; border-radius: 99px; background: currentColor; }
+.tb-count { display: inline-flex; align-items: center; justify-content: center; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 99px; background: var(--panel-3); color: var(--muted); font-family: var(--font-mono); font-size: 9px; }
+.tb-btn[aria-pressed="true"] .tb-count { background: color-mix(in srgb, var(--accent) 26%, var(--panel-3)); color: var(--accent); }
+.icon-btn svg { width: 14px; height: 14px; }
+
+/* ---------------------------------------------------------------- layout */
+.ide { flex: 1 1 auto; min-height: 0; display: flex; }
+.sidebar {
+  width: var(--sidebar);
+  flex: 0 0 var(--sidebar);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--line);
+  background: var(--panel);
+  overflow: hidden;
+}
+.side-head {
+  height: 30px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+.side-overview {
+  flex: 0 0 auto;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0 10px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  text-align: left;
+  font-size: 11.5px;
+}
+.side-overview:hover { background: var(--panel-2); color: var(--text); }
+.side-overview.is-active { background: var(--accent-soft); color: var(--accent); box-shadow: inset 2px 0 0 var(--accent); }
+.side-files { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 4px 0; }
+.file-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 7px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 3px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  text-align: left;
+}
+.file-row:hover { background: var(--panel-2); color: var(--text); }
+.file-row.is-active { background: var(--accent-soft); color: var(--text); box-shadow: inset 2px 0 0 var(--accent); }
+.file-status { width: 6px; height: 6px; border-radius: 99px; background: var(--muted); }
+.file-name { min-width: 0; display: flex; flex-direction: column; line-height: 1.2; }
+.file-name .base { font-family: var(--font-mono); font-size: 11px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-row.is-active .file-name .base { color: var(--text); }
+.file-name .dir { font-family: var(--font-mono); font-size: 8.5px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-delta { font-family: var(--font-mono); font-size: 8.5px; color: var(--faint); white-space: nowrap; }
+.file-delta .add { color: var(--green); }
+.file-delta .del { color: var(--red); }
+.file-count { min-width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; border-radius: 99px; background: var(--panel-3); color: var(--muted); font-family: var(--font-mono); font-size: 8.5px; }
+.file-row.has-findings .file-count { color: var(--orange); background: var(--orange-soft); }
+.side-foot {
+  flex: 0 0 auto;
+  border-top: 1px solid var(--line);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  color: var(--faint);
+}
+.side-foot .row { display: flex; justify-content: space-between; gap: 8px; }
+.side-foot strong { color: var(--muted); font-weight: 500; }
+.side-foot .agent-line { display: flex; align-items: center; gap: 5px; }
+
+.workbench { flex: 1 1 auto; min-width: 0; min-height: 0; background: var(--bg); overflow: hidden; }
+#view { height: 100%; min-height: 0; }
+.loading { height: 100%; display: grid; place-items: center; color: var(--faint); font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+
+/* -------------------------------------------------------------- statusbar */
+.statusbar {
+  flex: 0 0 var(--statusbar);
+  height: var(--statusbar);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 10px;
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.statusbar .spacer { flex: 1; }
+.statusbar .st { display: inline-flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; }
+.statusbar .st-accent { color: var(--accent); }
+
+/* ----------------------------------------------------------------- shared */
+.eyebrow { font-family: var(--font-mono); font-size: 8.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--faint); }
+.muted { color: var(--muted); }
+.faint { color: var(--faint); }
+.mono { font-family: var(--font-mono); }
+.nowrap { white-space: nowrap; }
+.btn {
+  height: 27px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel-2);
+  color: var(--text-2);
+  font-size: 10.5px;
+  font-weight: 550;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--line-2); background: var(--panel-3); color: var(--text); }
+.btn.primary { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { background: color-mix(in srgb, var(--accent) 88%, white); }
+.btn.sm { height: 23px; padding: 0 7px; font-size: 9.5px; }
+.btn.danger { color: var(--red); border-color: color-mix(in srgb, var(--red) 34%, var(--line)); }
+.btn.danger:hover { background: var(--red-soft); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn svg { width: 12px; height: 12px; }
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  white-space: nowrap;
+}
+.pill .dot { width: 4px; height: 4px; border-radius: 99px; background: currentColor; }
+.pill.red { color: var(--red); border-color: color-mix(in srgb, var(--red) 30%, var(--line)); background: var(--red-soft); }
+.pill.orange { color: var(--orange); border-color: color-mix(in srgb, var(--orange) 30%, var(--line)); background: var(--orange-soft); }
+.pill.green { color: var(--green); border-color: color-mix(in srgb, var(--green) 30%, var(--line)); background: var(--green-soft); }
+.pill.blue { color: var(--blue); border-color: color-mix(in srgb, var(--blue) 30%, var(--line)); background: var(--blue-soft); }
+.pill.purple { color: var(--purple); border-color: color-mix(in srgb, var(--purple) 30%, var(--line)); background: var(--purple-soft); }
+.pill.pink { color: var(--pink); border-color: color-mix(in srgb, var(--pink) 30%, var(--line)); background: var(--pink-soft); }
+.pill.accent { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 32%, var(--line)); background: var(--accent-soft); }
+.pill.slate { color: var(--slate); }
+
+/* --------------------------------------------------------------- overview */
+.overview { height: 100%; overflow: auto; padding: 20px 22px 40px; }
+.overview-inner { max-width: 1520px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+.overview-head { display: flex; align-items: flex-start; gap: 18px; flex-wrap: wrap; padding: 2px 0 8px; }
+.verdict-badge {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border: 1px solid color-mix(in srgb, var(--verdict-color) 36%, var(--line));
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--verdict-color) 8%, var(--panel));
+  color: var(--verdict-color);
+  flex: 0 0 auto;
+}
+.verdict-badge svg { width: 20px; height: 20px; }
+.verdict-badge .v-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
+.verdict-badge .v-state { font-size: 14px; font-weight: 650; line-height: 1.1; }
+.overview-title { min-width: 0; flex: 1 1 560px; }
+.overview-title h1 { font-size: clamp(20px, 2.1vw, 30px); max-width: 1000px; }
+.overview-summary { margin-top: 6px; color: var(--text-2); font-size: 12px; max-width: 980px; }
+.overview-meta { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 9px; }
+.overview-tools { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; margin-left: auto; }
+
+.metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; }
+.metric {
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  min-width: 0;
+}
+.metric-label { font-family: var(--font-mono); font-size: 8px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+.metric-value { font-family: var(--font-display); font-size: 21px; font-weight: 690; letter-spacing: -.04em; line-height: 1.15; margin-top: 2px; }
+.metric-sub { color: var(--muted); font-size: 9.5px; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.metric-sub .add { color: var(--green); }
+.metric-sub .del { color: var(--red); }
+
+.dash-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(280px, .65fr); gap: 12px; align-items: start; }
+.card {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel);
+}
+.card-pad { padding: 13px; }
+.card-head { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; margin-bottom: 9px; }
+.card-head h2 { font-size: 14px; }
+.card-head p { color: var(--muted); font-size: 10.5px; margin-top: 2px; }
+.card-head .card-tools { margin-left: auto; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+
+.flow-card { padding: 13px; }
+.flow-wrap { overflow-x: auto; border-radius: 5px; background: linear-gradient(180deg, rgba(255, 255, 255, .012), transparent); }
+.flow-svg { width: 100%; height: auto; min-width: 680px; }
+.flow-svg .flow-node { cursor: default; }
+.flow-svg .flow-node rect { fill: var(--panel-2); stroke: var(--line-2); stroke-width: 1; }
+.flow-svg .flow-node .node-dot { fill: var(--kind-color, var(--accent)); }
+.flow-svg .flow-node .node-kind { fill: var(--kind-color, var(--muted)); font-family: var(--font-mono); font-size: 8px; letter-spacing: .12em; }
+.flow-svg .flow-node .node-label { fill: var(--text); font-family: var(--font-sans); font-size: 11px; font-weight: 560; }
+.flow-svg .flow-node .node-sub { fill: var(--faint); font-family: var(--font-mono); font-size: 8px; }
+.flow-svg .flow-node.kind-input { --kind-color: var(--blue); }
+.flow-svg .flow-node.kind-transform { --kind-color: var(--accent); }
+.flow-svg .flow-node.kind-output { --kind-color: var(--green); }
+.flow-svg .flow-node.kind-store { --kind-color: var(--purple); }
+.flow-svg .flow-node.kind-external { --kind-color: var(--pink); }
+.flow-svg .flow-node.kind-decision { --kind-color: var(--orange); }
+.flow-svg .flow-node.kind-event { --kind-color: var(--blue); }
+.flow-svg .flow-node.kind-ui { --kind-color: var(--accent); }
+.flow-svg .flow-node:hover rect { stroke: var(--kind-color, var(--accent)); }
+.flow-svg .flow-edge { fill: none; stroke: var(--line-2); stroke-width: 1.1; }
+.flow-svg .flow-edge.kind-data { stroke: color-mix(in srgb, var(--blue) 46%, var(--line-2)); }
+.flow-svg .flow-edge.kind-control { stroke: color-mix(in srgb, var(--accent) 42%, var(--line-2)); }
+.flow-svg .flow-edge.kind-event { stroke: color-mix(in srgb, var(--pink) 48%, var(--line-2)); }
+.flow-svg .flow-edge.kind-dependency { stroke-dasharray: 3 4; }
+.flow-svg .edge-label { fill: var(--faint); font-family: var(--font-mono); font-size: 7px; paint-order: stroke; stroke: var(--panel); stroke-width: 3px; }
+.flow-legend { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 7px; color: var(--faint); font-family: var(--font-mono); font-size: 8px; }
+.flow-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.flow-legend i { width: 5px; height: 5px; border-radius: 1px; background: currentColor; }
+.flow-legend .l-input { color: var(--blue); }
+.flow-legend .l-transform { color: var(--accent); }
+.flow-legend .l-output { color: var(--green); }
+.flow-legend .l-store { color: var(--purple); }
+.flow-legend .l-external { color: var(--pink); }
+.flow-legend .l-decision { color: var(--orange); }
+
+.signal-card { padding: 13px; display: flex; flex-direction: column; gap: 10px; }
+.signal-top { display: flex; align-items: center; gap: 10px; }
+.signal-ring { width: 62px; height: 62px; flex: 0 0 auto; }
+.signal-ring circle { fill: none; stroke-width: 6; }
+.signal-ring .track { stroke: var(--line); }
+.signal-ring .value { stroke: var(--accent); stroke-linecap: round; }
+.signal-ring text { fill: var(--text); font-family: var(--font-display); font-size: 14px; font-weight: 700; }
+.signal-title { font-size: 12px; font-weight: 600; }
+.signal-sub { color: var(--muted); font-size: 10px; margin-top: 2px; }
+.signal-sep { height: 1px; background: var(--line); }
+.signal-row { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-family: var(--font-mono); font-size: 9px; }
+.signal-row strong { color: var(--text-2); font-weight: 600; }
+.sev-bar { display: flex; height: 6px; border-radius: 99px; overflow: hidden; background: var(--panel-2); border: 1px solid var(--line); }
+.sev-bar span { height: 100%; min-width: 0; }
+.sev-bar .s-blocker { background: var(--red); }
+.sev-bar .s-high { background: var(--orange); }
+.sev-bar .s-medium { background: var(--accent); }
+.sev-bar .s-low { background: var(--blue); }
+.sev-bar .s-nit { background: var(--purple); }
+.sev-bar .s-question { background: var(--pink); }
+.sev-bar .s-praise { background: var(--green); }
+.sev-legend { display: flex; flex-wrap: wrap; gap: 3px 8px; color: var(--muted); font-family: var(--font-mono); font-size: 8px; }
+.sev-legend span { display: inline-flex; align-items: center; gap: 3px; }
+.sev-legend i { width: 4px; height: 4px; border-radius: 99px; background: currentColor; }
+.lens-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.iteration-card { padding: 13px; }
+.iteration-head { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+.iteration-head h2 { font-size: 14px; }
+.iteration-head p { color: var(--muted); font-size: 10.5px; margin-top: 2px; }
+.delta-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.delta-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border: 1px solid var(--line); border-radius: 4px; font-family: var(--font-mono); font-size: 8.5px; color: var(--muted); }
+.delta-chip b { font-family: var(--font-display); font-size: 11px; color: var(--text); }
+.delta-chip.new { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); background: var(--accent-soft); }
+.delta-chip.resolved { color: var(--green); border-color: color-mix(in srgb, var(--green) 30%, var(--line)); background: var(--green-soft); }
+.delta-chip.unverified { color: var(--orange); border-color: color-mix(in srgb, var(--orange) 30%, var(--line)); background: var(--orange-soft); }
+.iteration-note { margin-top: 7px; color: var(--text-2); font-size: 11px; max-width: 1000px; }
+.code-delta { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--line); color: var(--muted); font-family: var(--font-mono); font-size: 9px; }
+.code-delta strong { color: var(--text-2); font-weight: 600; }
+.code-delta .add { color: var(--green); }
+.code-delta .del { color: var(--red); }
+.delta-files { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; }
+.delta-file { padding: 1px 5px; border: 1px solid var(--line); border-radius: 3px; color: var(--faint); font-family: var(--font-mono); font-size: 8.5px; }
+.delta-file .add { color: var(--green); }
+.delta-file .del { color: var(--red); }
+.sparkline { margin-top: 8px; }
+.sparkline-head { display: flex; justify-content: space-between; gap: 10px; color: var(--faint); font-family: var(--font-mono); font-size: 8px; text-transform: uppercase; letter-spacing: .06em; }
+.sparkline svg { width: 100%; height: 52px; overflow: visible; }
+.sparkline .grid { stroke: var(--line); stroke-dasharray: 2 4; }
+.sparkline .line { fill: none; stroke: var(--accent); stroke-width: 1.4; }
+.sparkline .dot { fill: var(--panel); stroke: var(--accent); stroke-width: 1.4; }
+.sparkline .dot.current { fill: var(--accent); }
+.sparkline .label { fill: var(--faint); font-family: var(--font-mono); font-size: 7px; }
+.timeline { display: flex; overflow-x: auto; margin-top: 8px; border-top: 1px solid var(--line); padding-top: 6px; }
+.timeline-item { min-width: 130px; padding: 3px 10px; border: 0; border-left: 1px solid var(--line); background: transparent; text-align: left; display: flex; flex-direction: column; gap: 1px; }
+.timeline-item:first-child { border-left: 0; padding-left: 0; }
+.timeline-item.is-current { background: var(--accent-soft); border-radius: 0 4px 4px 0; }
+.timeline-item.is-link:hover { background: var(--panel-2); }
+.timeline-item .tl-iter { color: var(--faint); font-family: var(--font-mono); font-size: 8px; letter-spacing: .08em; }
+.timeline-item .tl-verdict { display: flex; align-items: center; gap: 4px; color: var(--text-2); font-size: 10px; font-weight: 600; }
+.timeline-item .tl-verdict i { width: 5px; height: 5px; border-radius: 99px; background: var(--tl-color, var(--faint)); }
+.timeline-item .tl-counts { color: var(--faint); font-family: var(--font-mono); font-size: 8px; }
+
+.overview-lower { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: 12px; align-items: start; }
+.section-card { padding: 13px; }
+.top-findings { display: flex; flex-direction: column; }
+.top-finding { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 8px; align-items: start; padding: 6px 0; border-top: 1px solid var(--line); }
+.top-finding:first-child { border-top: 0; padding-top: 0; }
+.top-finding .tf-sev { padding-top: 1px; }
+.top-finding .tf-title { font-size: 11px; color: var(--text-2); }
+.top-finding .tf-meta { color: var(--faint); font-family: var(--font-mono); font-size: 8.5px; margin-top: 2px; }
+.top-finding .tf-go { align-self: center; }
+.empty-line { color: var(--faint); font-size: 10.5px; padding: 6px 0; }
+
+.actions-list { display: flex; flex-direction: column; }
+.action-row { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 7px; align-items: start; padding: 5px 0; border-top: 1px solid var(--line); }
+.action-row:first-child { border-top: 0; }
+.action-num { width: 18px; height: 18px; display: grid; place-items: center; border-radius: 4px; background: var(--accent-soft); color: var(--accent); font-family: var(--font-mono); font-size: 8px; font-weight: 700; }
+.action-text { font-size: 10.5px; color: var(--text-2); }
+.risk-row { padding: 5px 0; border-top: 1px solid var(--line); }
+.risk-row:first-child { border-top: 0; }
+.risk-title { display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 600; color: var(--text-2); }
+.risk-title i { width: 5px; height: 5px; border-radius: 99px; background: var(--risk-color, var(--muted)); }
+.risk-text { color: var(--muted); font-size: 10px; margin-top: 2px; }
+
+/* ------------------------------------------------------------------- file */
+.file-view { height: 100%; min-height: 0; display: flex; flex-direction: column; padding: 10px 12px 8px; gap: 7px; }
+.file-head { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.file-title { min-width: 0; display: flex; align-items: baseline; gap: 0; flex-wrap: wrap; font-family: var(--font-mono); font-size: 15px; letter-spacing: -.02em; }
+.file-title .dir { color: var(--faint); }
+.file-title .base { color: var(--text); font-weight: 650; }
+.file-badges { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-left: auto; }
+.file-head-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; color: var(--faint); font-family: var(--font-mono); font-size: 8.5px; }
+.file-head-meta .add { color: var(--green); }
+.file-head-meta .del { color: var(--red); }
+.file-head-meta .sep { opacity: .5; }
+.file-panes { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.03fr) minmax(0, .97fr); gap: 8px; }
+.code-panel, .review-panel {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.code-panel { background: var(--code-bg); }
+.pane-head {
+  flex: 0 0 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 9px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+.pane-title { display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 600; color: var(--text-2); }
+.pane-title svg { width: 12px; height: 12px; color: var(--faint); }
+.pane-meta { display: flex; align-items: center; gap: 5px; color: var(--faint); font-family: var(--font-mono); font-size: 8.5px; flex-wrap: wrap; }
+.pane-actions { margin-left: auto; display: flex; align-items: center; gap: 5px; }
+.segmented { display: flex; align-items: center; padding: 1px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel-2); }
+.segmented button { height: 20px; border: 0; border-radius: 3px; background: transparent; color: var(--faint); padding: 0 7px; font-family: var(--font-mono); font-size: 8px; letter-spacing: .05em; text-transform: uppercase; }
+.segmented button.is-active { background: var(--panel-3); color: var(--text-2); }
+.segmented button:hover { color: var(--text); }
+.code-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+.code-mount { min-width: 0; min-height: 100%; }
+.code-mount diffs-container { display: block; min-width: 0; }
+.code-state { height: 100%; min-height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; padding: 20px; text-align: center; color: var(--muted); }
+.code-state .state-icon { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); color: var(--faint); }
+.code-state h3 { font-size: 13px; color: var(--text); }
+.code-state p { font-size: 10.5px; max-width: 320px; }
+.code-loading { height: 100%; min-height: 260px; display: grid; place-items: center; color: var(--faint); font-family: var(--font-mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+.code-loading .loader { width: 18px; height: 18px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 8px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.code-fallback { margin: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 5px; background: var(--panel-2); color: var(--muted); font-size: 11px; }
+.code-fallback pre { margin: 8px 0 0; max-height: 340px; overflow: auto; background: var(--bg); padding: 8px; border-radius: 4px; font-size: 10px; color: var(--text-2); }
+
+.review-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 10px; }
+.agent-summary { padding: 8px 10px; border-left: 2px solid var(--accent); background: var(--panel-2); border-radius: 0 5px 5px 0; margin-bottom: 10px; }
+.agent-summary .eyebrow { margin-bottom: 3px; }
+.agent-summary p { font-size: 11.5px; color: var(--text-2); }
+.review-section { margin-top: 12px; }
+.review-section:first-of-type { margin-top: 0; }
+.review-section-head { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+.review-section-head h3 { font-family: var(--font-mono); font-size: 8.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.review-section-head .count { color: var(--faint); font-family: var(--font-mono); font-size: 8.5px; }
+.review-section-head .line { flex: 1; height: 1px; background: var(--line); }
+.finding-row {
+  --finding-color: var(--muted);
+  --finding-soft: transparent;
+  padding: 7px 8px 7px 10px;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--finding-color);
+  border-radius: 0 5px 5px 0;
+  background: var(--panel-2);
+  margin-bottom: 5px;
+}
+.finding-row.sev-blocker { --finding-color: var(--red); --finding-soft: var(--red-soft); }
+.finding-row.sev-high { --finding-color: var(--orange); --finding-soft: var(--orange-soft); }
+.finding-row.sev-medium { --finding-color: var(--accent); --finding-soft: var(--accent-soft); }
+.finding-row.sev-low { --finding-color: var(--blue); --finding-soft: var(--blue-soft); }
+.finding-row.sev-question { --finding-color: var(--pink); --finding-soft: var(--pink-soft); }
+.finding-row.sev-nit { --finding-color: var(--purple); --finding-soft: var(--purple-soft); }
+.finding-row.sev-praise { --finding-color: var(--green); --finding-soft: var(--green-soft); }
+.finding-head { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.finding-sev { padding: 0 5px; border-radius: 3px; background: var(--finding-soft); color: var(--finding-color); font-family: var(--font-mono); font-size: 8px; text-transform: uppercase; letter-spacing: .04em; }
+.finding-title { font-size: 11.5px; font-weight: 620; color: var(--text); flex: 1 1 180px; min-width: 0; }
+.finding-ref { margin-left: auto; color: var(--faint); font-family: var(--font-mono); font-size: 8.5px; white-space: nowrap; }
+.finding-detail { margin-top: 4px; color: var(--text-2); font-size: 10.5px; }
+.finding-fix { margin-top: 4px; color: var(--muted); font-size: 10px; }
+.finding-fix b { color: var(--finding-color); font-weight: 600; }
+.finding-evidence { margin-top: 3px; color: var(--faint); font-family: var(--font-mono); font-size: 8.5px; line-height: 1.45; }
+.finding-evidence span { display: inline; }
+.finding-foot { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-top: 5px; color: var(--faint); font-family: var(--font-mono); font-size: 8px; }
+.finding-foot button { margin-left: auto; }
+.finding-foot .new-note { margin-left: auto; }
+
+.block-row {
+  display: grid;
+  grid-template-columns: 24px 62px 68px minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: center;
+  min-height: 27px;
+  padding: 3px 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.block-row:hover { border-color: var(--line); background: var(--panel-2); color: var(--text-2); }
+.block-row.is-active { border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); background: var(--accent-soft); }
+.block-id { color: var(--faint); font-family: var(--font-mono); font-size: 8.5px; }
+.block-range { color: var(--faint); font-family: var(--font-mono); font-size: 8.5px; white-space: nowrap; }
+.block-assess { font-family: var(--font-mono); font-size: 8px; text-transform: uppercase; letter-spacing: .04em; }
+.block-assess.sound { color: var(--green); }
+.block-assess.concern { color: var(--orange); }
+.block-assess.needs-work { color: var(--red); }
+.block-assess.question { color: var(--blue); }
+.block-assess.not-reviewed { color: var(--faint); }
+.block-summary { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.block-count { color: var(--faint); font-family: var(--font-mono); font-size: 8px; white-space: nowrap; }
+.coverage-details { margin-top: 8px; border-top: 1px solid var(--line); padding-top: 5px; }
+.coverage-details summary { cursor: pointer; color: var(--faint); font-family: var(--font-mono); font-size: 8.5px; list-style: none; }
+.coverage-details summary::-webkit-details-marker { display: none; }
+.coverage-details summary::before { content: "▸ "; }
+.coverage-details[open] summary::before { content: "▾ "; }
+.coverage-details .blocks { margin-top: 4px; }
+.review-empty { padding: 20px 10px; text-align: center; color: var(--muted); font-size: 10.5px; }
+.review-empty strong { display: block; color: var(--green); font-size: 12px; margin-bottom: 3px; }
+.file-note { margin-top: 8px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 5px; background: var(--panel-2); color: var(--muted); font-size: 10px; }
+
+/* --------------------------------------------------------------- notes */
+.notes-drawer[hidden] { display: none; }
+.notes-drawer {
+  position: fixed;
+  top: var(--topbar);
+  right: 0;
+  bottom: var(--statusbar);
+  width: 370px;
+  max-width: 100vw;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--line-2);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  animation: slideIn .16s ease;
+}
+@keyframes slideIn { from { transform: translateX(20px); opacity: .4; } to { transform: translateX(0); opacity: 1; } }
+.notes-head { flex: 0 0 38px; display: flex; align-items: center; gap: 7px; padding: 0 10px; border-bottom: 1px solid var(--line); }
+.notes-head h2 { font-size: 13px; }
+.notes-head .notes-close { margin-left: auto; }
+.notes-status { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-bottom: 1px solid var(--line); color: var(--faint); font-family: var(--font-mono); font-size: 8.5px; }
+.notes-body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 9px 10px; }
+.notes-section { margin-bottom: 12px; }
+.notes-section-head { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; color: var(--faint); font-family: var(--font-mono); font-size: 8px; letter-spacing: .1em; text-transform: uppercase; }
+.notes-section-head .count { color: var(--muted); }
+.note-card { padding: 7px 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--panel-2); margin-bottom: 5px; }
+.note-card .note-anchor { color: var(--faint); font-family: var(--font-mono); font-size: 8.5px; margin-bottom: 3px; }
+.note-card .note-text { color: var(--text-2); font-size: 10.5px; white-space: pre-wrap; }
+.note-card .note-actions { display: flex; align-items: center; gap: 5px; margin-top: 5px; }
+.note-card .note-status { margin-left: auto; color: var(--faint); font-family: var(--font-mono); font-size: 8px; text-transform: uppercase; }
+.note-card.is-seen .note-status { color: var(--blue); }
+.note-card.is-done .note-status { color: var(--green); }
+.reply-card { padding: 7px 8px; border-left: 2px solid var(--accent); background: var(--accent-soft); border-radius: 0 5px 5px 0; margin-bottom: 5px; }
+.reply-card .reply-meta { color: var(--faint); font-family: var(--font-mono); font-size: 8px; margin-bottom: 2px; }
+.reply-card .reply-text { color: var(--text-2); font-size: 10.5px; white-space: pre-wrap; }
+.notes-empty { color: var(--faint); font-size: 10px; padding: 8px 0; }
+.notes-foot { flex: 0 0 auto; border-top: 1px solid var(--line); padding: 8px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; background: var(--panel); }
+.notes-foot .btn { flex: 1 1 auto; }
+.notes-foot .offline { color: var(--orange); font-family: var(--font-mono); font-size: 8.5px; width: 100%; }
+.notes-composer { margin-top: 4px; }
+.notes-composer textarea { width: 100%; height: 52px; resize: vertical; padding: 6px 7px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--text); font-size: 10.5px; }
+.notes-composer .composer-actions { display: flex; gap: 4px; margin-top: 4px; }
+
+/* -------------------------------------------------------------- dialogs */
+.dialog {
+  width: min(460px, calc(100vw - 24px));
+  padding: 0;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+.dialog::backdrop { background: rgba(0, 0, 0, .55); }
+.dialog-head { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px 0; }
+.dialog-head h2 { font-size: 15px; }
+.dialog-head .icon-btn { margin-left: auto; }
+.dialog-body { padding: 10px 14px 14px; }
+.dialog-body textarea { width: 100%; resize: vertical; padding: 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); color: var(--text); font-size: 11.5px; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 9px; }
+.note-anchor { margin-bottom: 7px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel-2); color: var(--muted); font-family: var(--font-mono); font-size: 9px; }
+.help-dialog { width: min(520px, calc(100vw - 24px)); }
+.help-list { counter-reset: step; display: flex; flex-direction: column; gap: 7px; }
+.help-list li { counter-increment: step; position: relative; padding-left: 24px; color: var(--text-2); font-size: 11.5px; }
+.help-list li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 17px; height: 17px; display: grid; place-items: center; border-radius: 4px; background: var(--accent-soft); color: var(--accent); font-family: var(--font-mono); font-size: 8px; font-weight: 700; }
+.help-foot { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10.5px; }
+.help-foot code { color: var(--accent); }
+
+.toast { position: fixed; right: 14px; bottom: calc(var(--statusbar) + 12px); z-index: 80; max-width: min(400px, calc(100vw - 28px)); padding: 7px 10px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--panel-3); color: var(--text-2); box-shadow: var(--shadow); font-size: 10.5px; opacity: 0; transform: translateY(6px); pointer-events: none; transition: opacity .16s ease, transform .16s ease; }
+.toast.is-visible { opacity: 1; transform: translateY(0); }
+.reload-bar { position: fixed; left: 50%; bottom: calc(var(--statusbar) + 10px); transform: translateX(-50%); z-index: 60; display: flex; align-items: center; gap: 8px; padding: 6px 9px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--panel-3); color: var(--text-2); box-shadow: var(--shadow); font-size: 10.5px; }
+.reload-bar[hidden] { display: none; }
+.load-error { margin: 30px auto; max-width: 720px; padding: 18px; border: 1px solid color-mix(in srgb, var(--red) 34%, var(--line)); border-radius: 7px; background: var(--red-soft); }
+.load-error h2 { font-size: 16px; margin-bottom: 4px; }
+.load-error p { color: var(--text-2); font-size: 11px; }
+.load-error pre { margin-top: 8px; padding: 8px; overflow: auto; background: var(--bg); border-radius: 4px; color: var(--red); font-size: 9.5px; }
+
+/* ----------------------------------------------------------- annotations */
+html[data-annotate="on"] .finding-row,
+html[data-annotate="on"] .block-row,
+html[data-annotate="on"] .flow-node,
+html[data-annotate="on"] .agent-summary,
+html[data-annotate="on"] .file-title,
+html[data-annotate="on"] .top-finding,
+html[data-annotate="on"] .timeline-item { cursor: crosshair; }
+html[data-annotate="on"] .finding-row:hover,
+html[data-annotate="on"] .block-row:hover,
+html[data-annotate="on"] .agent-summary:hover,
+html[data-annotate="on"] .top-finding:hover { outline: 1px dashed var(--accent); outline-offset: -1px; }
+html[data-annotate="on"] .flow-node:hover rect { stroke: var(--accent); stroke-dasharray: 3 2; }
+html[data-annotate="on"] .code-scroll { cursor: crosshair; }
+:host-context(html[data-annotate="on"]) [data-line]:hover { outline: 1px dashed var(--accent); outline-offset: -1px; cursor: crosshair; }
+
+/* ------------------------------------------------------------ responsive */
+@media (max-width: 1150px) {
+  .metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .dash-grid { grid-template-columns: 1fr; }
+  .overview-lower { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+  :root { --topbar: 52px; }
+  .topbar { flex-wrap: wrap; height: auto; min-height: var(--topbar); padding: 7px 10px; gap: 7px; }
+  .topbar-center { order: 3; flex-basis: 100%; overflow-x: auto; }
+  .brand-repo { max-width: 150px; }
+  .ide { flex-direction: column; }
+  .sidebar { width: 100%; flex: 0 0 142px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .side-head { height: 24px; }
+  .side-overview { height: 26px; border-bottom: 1px solid var(--line); }
+  .side-files { display: flex; overflow-x: auto; overflow-y: hidden; padding: 3px 4px; gap: 2px; }
+  .file-row { min-width: 180px; max-width: 220px; border: 1px solid var(--line); border-radius: 4px; }
+  .side-foot { display: none; }
+  .file-panes { grid-template-columns: 1fr; overflow: auto; }
+  .code-panel { min-height: 52vh; }
+  .review-panel { min-height: 45vh; }
+  .notes-drawer { width: 100%; top: var(--topbar); }
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .metric:nth-child(5) { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  .overview { padding: 12px 10px 28px; }
+  .file-view { padding: 7px 6px; }
+  .file-title { font-size: 13px; }
+  .file-badges { margin-left: 0; }
+  .topbar-actions .tb-btn span:not(.tb-dot):not(.tb-count) { display: none; }
+  .block-row { grid-template-columns: 20px 55px 60px minmax(0, 1fr); }
+  .block-count { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <path d="M4 7.5A3.5 3.5 0 0 1 7.5 4h17A3.5 3.5 0 0 1 28 7.5v13a3.5 3.5 0 0 1-3.5 3.5H14l-6.4 4.3A1 1 0 0 1 6 27.5V24H7.5A3.5 3.5 0 0 1 4 20.5v-13Z" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M10 11h12M10 15.5h8M10 20h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="23.5" cy="20" r="3.2" fill="currentColor"/>
+      </svg>
+      <span class="brand-word">Review</span>
+      <span class="brand-repo">/ <b id="brand-repo">repository</b></span>
+    </div>
+    <div class="topbar-center" id="topbar-center"></div>
+    <div class="topbar-actions">
+      <button class="tb-btn" id="annotate-btn" aria-pressed="false" title="Select code or a finding to add a note">
+        <span class="tb-dot"></span><span>Annotate</span>
+      </button>
+      <button class="tb-btn" id="notes-btn" title="Open review notes">
+        Notes <span class="tb-count" id="notes-count">0</span>
+      </button>
+      <button class="icon-btn" id="theme-btn" aria-label="Switch theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.5 8.5 0 1 0 10.2 10.2Z" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="icon-btn" id="help-btn" aria-label="How to review">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 1 1 3.4 2.3c-.8.35-1 .85-1 1.5v.3" stroke-linecap="round"/><circle cx="12" cy="17" r=".8" fill="currentColor" stroke="none"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="ide">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="workbench" id="main">
+      <div id="view">
+        <div class="loading">Loading review…</div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="statusbar" id="statusbar"></footer>
+</div>
+
+<div class="reload-bar" id="reload-bar" hidden>
+  <span>A new iteration is available.</span>
+  <button class="btn btn-sm" id="reload-btn">Reload</button>
+</div>
+
+<dialog class="dialog help-dialog" id="help-dialog">
+  <div class="dialog-head">
+    <div>
+      <div class="eyebrow">Review</div>
+      <h2>Read. Mark. Send.</h2>
+    </div>
+    <button class="icon-btn" data-close-dialog aria-label="Close help">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="dialog-body">
+    <ol class="help-list">
+      <li>Select a file in the left list.</li>
+      <li>Read the code and the agent note.</li>
+      <li>Click <b>Annotate</b>.</li>
+      <li>Click code or a finding. Write a note. Click <b>Queue note</b>.</li>
+      <li>Open <b>Notes</b>. Click <b>Send to agent</b>.</li>
+    </ol>
+    <p class="help-foot">The agent runs <code>wait</code>. It receives your notes. Its reply appears in Notes.</p>
+  </div>
+</dialog>
+
+<dialog class="dialog note-dialog" id="note-dialog">
+  <div class="dialog-head">
+    <div>
+      <div class="eyebrow">Review note</div>
+      <h2>Add note</h2>
+    </div>
+    <button class="icon-btn" data-close-note aria-label="Close note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="dialog-body">
+    <div class="note-anchor" id="note-anchor"></div>
+    <textarea id="note-text" rows="6" placeholder="What should the agent change?"></textarea>
+    <div class="dialog-actions">
+      <button class="btn" data-close-note>Cancel</button>
+      <button class="btn btn-primary" id="note-save">Queue note</button>
+    </div>
+  </div>
+</dialog>
+
+<aside class="notes-drawer" id="notes-drawer" hidden aria-label="Review notes"></aside>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="application/json" id="review-data">{"schemaVersion":1,"meta":{"runId":"20261029-192656-cc7a","iteration":2,"createdAt":"2026-10-29T19:26:58.642Z","renderedAt":"2026-10-29T19:26:58.673Z","draft":false,"generator":"code-review","archived":true,"repo":{"root":"C:/Users/Harsh/AppData/Local/Temp/opencode/code-review-demo-live","name":"code-review-demo-live","branch":"master","head":"315b3f5cde17934a1487044f21d24ad17648aa8b","headShort":"315b3f5c","dirty":true},"scope":{"kind":"worktree","label":"working tree vs HEAD","oldRef":"HEAD","newRef":null,"oldLabel":"HEAD","newLabel":"working tree","paths":[],"includeUntracked":true},"root":"C:/Users/Harsh/AppData/Local/Temp/opencode/code-review-demo-live"},"summary":{"verdict":"blocked","headline":"Refunds are safer, but checkout still commits before payment.","overview":"This iteration fixes cancel and the PII log. It parameterizes refunds and makes the migration safer. Checkout still saves before payment and swallows the error. Refunds still lack a pinned connection and an idempotency key.","iterationNote":"Fixed cancel, the PII log, refund SQL injection, the dropped customer index, and the refund race. Checkout still needs a transaction. Refunds still need a pinned connection and an idempotency key.","risks":[{"title":"Checkout still returns success after a failed payment","detail":"The order is saved before payment and the catch block still only logs.","severity":"blocker","files":["src/orders/orderService.ts"]},{"title":"Public routes still accept money instructions from the request body","detail":"Authentication and ownership checks are unchanged.","severity":"high","files":["src/api/orders.ts"]},{"title":"The new refund transaction is not connection-pinned","detail":"BEGIN and COMMIT go through a pooled query API; retries are not idempotent.","severity":"high","files":["src/orders/refundService.ts"]},{"title":"The migration still rewrites orders under a lock","detail":"The bigint change and backfill remain an unbounded in-place migration.","severity":"medium","files":["db/migrations/004_add_order_status.sql"]}],"nextActions":[{"action":"Put the order and payment writes inside one transaction, move email to an outbox, and rethrow failures.","priority":1,"file":"src/orders/orderService.ts","findingId":"F-001"},{"action":"Authenticate both routes, derive the customer from the session, and validate the refund amount.","priority":2,"file":"src/api/orders.ts","findingId":"F-004"},{"action":"Use a transaction callback or a pinned connection for refunds.","priority":3,"file":"src/orders/refundService.ts","findingId":"F-017"},{"action":"Add a unique idempotency key to refunds and return the existing record on retry.","priority":4,"file":"src/orders/refundService.ts","findingId":"F-018"},{"action":"Split the bigint change and backfill into expand, backfill, and contract steps.","priority":5,"file":"db/migrations/004_add_order_status.sql","findingId":"F-019"}]},"stats":{"files":10,"additions":112,"deletions":7,"blocks":12,"textFiles":9,"binaryFiles":1,"byStatus":{"added":5,"modified":3,"deleted":2},"findings":13,"severityCounts":{"blocker":1,"high":3,"medium":7,"low":1,"nit":0,"question":0,"praise":1},"lensCounts":{"database":5,"security":2,"performance":1,"fowler":3,"solid":1,"testing":1},"assessmentCounts":{"sound":3,"concern":4,"needs-work":5,"question":0,"not-reviewed":0},"totalBlocks":12,"reviewedBlocks":12,"coveragePct":100,"riskCounts":{"low":5,"medium":2,"high":3},"resolved":6,"new":3,"carried":10,"unverified":0,"draft":false},"files":[{"id":"f1","path":"assets/logo.png","oldPath":null,"status":"added","statusCode":"A","language":"png","binary":true,"tooLarge":false,"contentOmitted":true,"additions":0,"deletions":0,"oldBytes":0,"newBytes":68,"lineCount":{"old":0,"new":0},"lenses":[],"lensReasons":{},"warnings":["Binary file: content is not shown or reviewed line by line."],"blocks":[],"fileLevelFindings":[],"findings":[],"coveragePct":100,"reviewedBlocks":0,"totalBlocks":0,"fileReview":{"file":"assets/logo.png","risk":"low","summary":"Binary asset. It has no line-level review; the file is listed so the change set remains complete.","blocks":[]},"content":null},{"id":"f2","path":"db/migrations/004_add_order_status.sql","oldPath":null,"status":"added","statusCode":"A","language":"sql","binary":false,"tooLarge":false,"contentOmitted":false,"additions":6,"deletions":0,"oldBytes":0,"newBytes":394,"lineCount":{"old":0,"new":6},"lenses":["database"],"lensReasons":{"database":"path matches **/*.sql"},"warnings":[],"blocks":[{"id":"B1","startLine":1,"endLine":6,"oldStart":1,"oldEnd":1,"newStart":1,"newEnd":6,"side":"new","hunkIds":["H1"],"addedLines":[1,2,3,4,5,6],"deletedLines":[],"additions":6,"deletions":0,"additionsTotal":6,"deletionsTotal":0,"header":"@@ -0,0 +1,6 @@","section":"","oversized":false,"assessment":"needs-work","assessmentSummary":"Dropping the customer index is fixed and the status index is concurrent. The type change and backfill still lock the table and cannot be rolled back.","findings":[{"id":"F-019","file":"db/migrations/004_add_order_status.sql","blockId":"B1","side":"new","startLine":5,"endLine":6,"severity":"medium","lens":"database","tags":["locking","backfill","rollback","expand-contract"],"title":"The bigint type change and backfill still take a write lock","detail":"Preserving the customer index and making the status index concurrent are improvements. The in-place total_cents type change still rewrites the table, and the status backfill runs as one unbounded UPDATE with no rollback or batched plan.","suggestion":"Add the new column or type in an expand step, backfill in bounded batches with progress tracking, switch reads, then contract. Keep a reversible step for each deploy.","suggestionCode":"","confidence":"high","evidence":[]}]}],"fileLevelFindings":[],"findings":[{"id":"F-019","file":"db/migrations/004_add_order_status.sql","blockId":"B1","side":"new","startLine":5,"endLine":6,"severity":"medium","lens":"database","tags":["locking","backfill","rollback","expand-contract"],"title":"The bigint type change and backfill still take a write lock","detail":"Preserving the customer index and making the status index concurrent are improvements. The in-place total_cents type change still rewrites the table, and the status backfill runs as one unbounded UPDATE with no rollback or batched plan.","suggestion":"Add the new column or type in an expand step, backfill in bounded batches with progress tracking, switch reads, then contract. Keep a reversible step for each deploy.","suggestionCode":"","confidence":"high","evidence":[]}],"coveragePct":100,"reviewedBlocks":1,"totalBlocks":1,"fileReview":{"file":"db/migrations/004_add_order_status.sql","risk":"medium","summary":"The customer index is preserved and the status index is now concurrent. The in-place bigint type change and backfill still take a write lock and have no rollback plan.","blocks":[{"id":"B1","assessment":"needs-work","summary":"Dropping the customer index is fixed and the status index is concurrent. The type change and backfill still lock the table and cannot be rolled back."}]},"content":{"old":"","new":"ALTER TABLE orders ADD COLUMN status text;\nUPDATE orders SET status = 'pending' WHERE status IS NULL;\nALTER TABLE orders ALTER COLUMN status SET NOT NULL;\nALTER TABLE orders ADD CONSTRAINT orders_status_check CHECK (status IN ('pending', 'paid', 'cancelled', 'refunded'));\nALTER TABLE orders ALTER COLUMN total_cents TYPE bigint;\nCREATE INDEX CONCURRENTLY orders_status_idx ON orders (status);\n"}},{"id":"f3","path":"src/api/orders.ts","oldPath":null,"status":"modified","statusCode":"M","language":"typescript","binary":false,"tooLarge":false,"contentOmitted":false,"additions":10,"deletions":0,"oldBytes":383,"newBytes":675,"lineCount":{"old":13,"new":23},"lenses":["solid","fowler"],"lensReasons":{"solid":"always applied to source files","fowler":"always applied to source files"},"warnings":[],"blocks":[{"id":"B1","startLine":5,"endLine":23,"oldStart":5,"oldEnd":13,"newStart":5,"newEnd":23,"side":"new","hunkIds":["H1"],"addedLines":[8,9,10,11,12,18,19,20,21,22],"deletedLines":[],"additions":10,"deletions":0,"additionsTotal":10,"deletionsTotal":0,"header":"@@ -5,9 +5,19 @@ import { OrderService } from \"../orders/orderService\";","section":"import { OrderService } from \"../orders/orderService\";","oversized":false,"assessment":"needs-work","assessmentSummary":"Both new routes trust the request body. There is no authentication, ownership check, or schema validation before money moves.","findings":[{"id":"F-004","file":"src/api/orders.ts","blockId":"B1","side":"new","startLine":8,"endLine":20,"severity":"high","lens":"security","tags":["authorization","idor","validation"],"title":"Checkout and refund routes trust unauthenticated request bodies","detail":"The routes pass customerId and amount straight from req. body into money-moving service calls.","suggestion":"Authenticate the request, derive the customer from the session rather than the body, validate amounts with a schema, and check order ownership before calling the service.","suggestionCode":"","confidence":"high","evidence":[{"path":"src/api/orders.ts","line":7,"note":"customerId comes from req.body"},{"path":"src/orders/orderService.ts","line":51,"note":"refund accepts an unbounded amount"}]}]}],"fileLevelFindings":[],"findings":[{"id":"F-004","file":"src/api/orders.ts","blockId":"B1","side":"new","startLine":8,"endLine":20,"severity":"high","lens":"security","tags":["authorization","idor","validation"],"title":"Checkout and refund routes trust unauthenticated request bodies","detail":"The routes pass customerId and amount straight from req. body into money-moving service calls.","suggestion":"Authenticate the request, derive the customer from the session rather than the body, validate amounts with a schema, and check order ownership before calling the service.","suggestionCode":"","confidence":"high","evidence":[{"path":"src/api/orders.ts","line":7,"note":"customerId comes from req.body"},{"path":"src/orders/orderService.ts","line":51,"note":"refund accepts an unbounded amount"}]}],"coveragePct":100,"reviewedBlocks":1,"totalBlocks":1,"fileReview":{"file":"src/api/orders.ts","risk":"high","summary":"Two new endpoints expose the service without authentication or request validation. customerId and amount are taken directly from the request body.","blocks":[{"id":"B1","assessment":"needs-work","summary":"Both new routes trust the request body. There is no authentication, ownership check, or schema validation before money moves."}]},"content":{"old":"import { Router } from \"express\";\nimport { OrderRepository } from \"../orders/orderRepository\";\nimport { OrderService } from \"../orders/orderService\";\n\nconst router = Router();\nconst service = new OrderService(new OrderRepository());\n\nrouter.post(\"/:id/cancel\", async (req, res) => {\n  const order = await service.cancel(req.params.id);\n  res.json(order);\n});\n\nexport default router;\n","new":"import { Router } from \"express\";\nimport { OrderRepository } from \"../orders/orderRepository\";\nimport { OrderService } from \"../orders/orderService\";\n\nconst router = Router();\nconst service = new OrderService(new OrderRepository());\n\nrouter.post(\"/checkout\", async (req, res) => {\n  const order = await service.checkout(req.body.customerId, req.body.cart);\n  res.json(order);\n});\n\nrouter.post(\"/:id/cancel\", async (req, res) => {\n  const order = await service.cancel(req.params.id);\n  res.json(order);\n});\n\nrouter.post(\"/:id/refund\", async (req, res) => {\n  const result = await service.refund(req.params.id, req.body.amount);\n  res.json(result);\n});\n\nexport default router;\n"}},{"id":"f4","path":"src/legacy/legacyPricing.ts","oldPath":null,"status":"deleted","statusCode":"D","language":"typescript","binary":false,"tooLarge":false,"contentOmitted":false,"additions":0,"deletions":3,"oldBytes":119,"newBytes":0,"lineCount":{"old":3,"new":0},"lenses":["solid","fowler"],"lensReasons":{"solid":"always applied to source files","fowler":"always applied to source files"},"warnings":[],"blocks":[{"id":"B1","startLine":1,"endLine":3,"oldStart":1,"oldEnd":3,"newStart":1,"newEnd":1,"side":"old","hunkIds":["H1"],"addedLines":[],"deletedLines":[1,2,3],"additions":0,"deletions":3,"additionsTotal":0,"deletionsTotal":3,"header":"@@ -1,3 +0,0 @@","section":"","oversized":false,"assessment":"sound","assessmentSummary":"The deleted helper has no remaining call sites and is replaced by the new formatter.","findings":[{"id":"F-016","file":"src/legacy/legacyPricing.ts","blockId":"B1","side":"old","startLine":1,"endLine":2,"severity":"praise","lens":"fowler","tags":["deletion","simplification"],"title":"Removing the legacy pricing helper is a clean win","detail":"The old helper duplicated tax logic with a magic multiplier and had no tests. Deleting it reduces the number of pricing paths and removes a source of drift.","suggestion":"No action needed; keep the new formatter as the single formatting path.","suggestionCode":"","confidence":"high","evidence":[]}]}],"fileLevelFindings":[],"findings":[{"id":"F-016","file":"src/legacy/legacyPricing.ts","blockId":"B1","side":"old","startLine":1,"endLine":2,"severity":"praise","lens":"fowler","tags":["deletion","simplification"],"title":"Removing the legacy pricing helper is a clean win","detail":"The old helper duplicated tax logic with a magic multiplier and had no tests. Deleting it reduces the number of pricing paths and removes a source of drift.","suggestion":"No action needed; keep the new formatter as the single formatting path.","suggestionCode":"","confidence":"high","evidence":[]}],"coveragePct":100,"reviewedBlocks":1,"totalBlocks":1,"fileReview":{"file":"src/legacy/legacyPricing.ts","risk":"low","summary":"Removing the old pricing helper is a clean deletion; no remaining call sites were found.","blocks":[{"id":"B1","assessment":"sound","summary":"The deleted helper has no remaining call sites and is replaced by the new formatter."}]},"content":{"old":"export function legacyTotal(items: any[]): number {\n  return items.reduce((sum, item) => sum + item.price, 0) * 1.2;\n}\n","new":""}},{"id":"f5","path":"src/orders/checkout.test.ts","oldPath":null,"status":"added","statusCode":"A","language":"typescript","binary":false,"tooLarge":false,"contentOmitted":false,"additions":7,"deletions":0,"oldBytes":0,"newBytes":248,"lineCount":{"old":0,"new":7},"lenses":["solid","fowler"],"lensReasons":{"solid":"always applied to source files","fowler":"always applied to source files"},"warnings":[],"blocks":[{"id":"B1","startLine":1,"endLine":7,"oldStart":1,"oldEnd":1,"newStart":1,"newEnd":7,"side":"new","hunkIds":["H1"],"addedLines":[1,2,3,4,5,6,7],"deletedLines":[],"additions":7,"deletions":0,"additionsTotal":7,"deletionsTotal":0,"header":"@@ -0,0 +1,7 @@","section":"","oversized":false,"assessment":"concern","assessmentSummary":"The test cannot exercise checkout without a database, has no collaborators, and asserts only that the result is truthy.","findings":[{"id":"F-012","file":"src/orders/checkout.test.ts","blockId":"B1","side":"new","startLine":3,"endLine":6,"severity":"medium","lens":"testing","tags":["coverage","fake-db","failure-path"],"title":"The checkout test asserts truthiness and cannot catch the new failure modes","detail":"The test passes an empty repository and a cart with no items, then asserts that the result exists. It never verifies the order total, status, payment, or failure behavior, and it will not catch the transaction or validation regressions.","suggestion":"Use a fake database or repository to assert the total, status, and post-commit notification. Add a failing payment case and a duplicate-submit case.","suggestionCode":"","confidence":"high","evidence":[]}]}],"fileLevelFindings":[],"findings":[{"id":"F-012","file":"src/orders/checkout.test.ts","blockId":"B1","side":"new","startLine":3,"endLine":6,"severity":"medium","lens":"testing","tags":["coverage","fake-db","failure-path"],"title":"The checkout test asserts truthiness and cannot catch the new failure modes","detail":"The test passes an empty repository and a cart with no items, then asserts that the result exists. It never verifies the order total, status, payment, or failure behavior, and it will not catch the transaction or validation regressions.","suggestion":"Use a fake database or repository to assert the total, status, and post-commit notification. Add a failing payment case and a duplicate-submit case.","suggestionCode":"","confidence":"high","evidence":[]}],"coveragePct":100,"reviewedBlocks":1,"totalBlocks":1,"fileReview":{"file":"src/orders/checkout.test.ts","risk":"medium","summary":"The new test exercises the real checkout without a database or collaborators and only asserts truthiness. It does not protect the behavior that changed.","blocks":[{"id":"B1","assessment":"concern","summary":"The test cannot exercise checkout without a database, has no collaborators, and asserts only that the result is truthy."}]},"content":{"old":"","new":"import { OrderService } from \"./orderService\";\n\ntest(\"checkout returns an order\", async () => {\n  const service = new OrderService({} as any);\n  const result = await service.checkout(\"customer-1\", { items: [] });\n  expect(result).toBeTruthy();\n});\n"}},{"id":"f6","path":"src/orders/orderRepository.ts","oldPath":null,"status":"modified","statusCode":"M","language":"typescript","binary":false,"tooLarge":false,"contentOmitted":false,"additions":4,"deletions":0,"oldBytes":572,"newBytes":746,"lineCount":{"old":23,"new":27},"lenses":["database","solid","fowler"],"lensReasons":{"solid":"always applied to source files","fowler":"always applied to source files","database":"path contains \"repository\""},"warnings":[],"blocks":[{"id":"B1","startLine":20,"endLine":27,"oldStart":20,"oldEnd":23,"newStart":20,"newEnd":27,"side":"new","hunkIds":["H1"],"addedLines":[23,24,25,26],"deletedLines":[],"additions":4,"deletions":0,"additionsTotal":4,"deletionsTotal":0,"header":"@@ -20,4 +20,8 @@ export class OrderRepository {","section":"export class OrderRepository {","oversized":false,"assessment":"concern","assessmentSummary":"The query returns all columns and every row for a customer, orders only by created_at, and has no limit.","findings":[{"id":"F-013","file":"src/orders/orderRepository.ts","blockId":"B1","side":"new","startLine":24,"endLine":25,"severity":"low","lens":"database","tags":["select-star","pagination","index"],"title":"Customer query returns every column and every row","detail":"The new query selects all columns and all orders for a customer, with no limit, and orders by created_at while the migration drops the only customer index. It will not scale with order history.","suggestion":"Select only the columns the caller needs, add pagination or a bounded limit, and add a composite index on (customer_id, created_at DESC).","suggestionCode":"","confidence":"high","evidence":[{"path":"db/migrations/004_add_order_status.sql","line":6,"note":"the migration drops the customer index"}]}]}],"fileLevelFindings":[],"findings":[{"id":"F-013","file":"src/orders/orderRepository.ts","blockId":"B1","side":"new","startLine":24,"endLine":25,"severity":"low","lens":"database","tags":["select-star","pagination","index"],"title":"Customer query returns every column and every row","detail":"The new query selects all columns and all orders for a customer, with no limit, and orders by created_at while the migration drops the only customer index. It will not scale with order history.","suggestion":"Select only the columns the caller needs, add pagination or a bounded limit, and add a composite index on (customer_id, created_at DESC).","suggestionCode":"","confidence":"high","evidence":[{"path":"db/migrations/004_add_order_status.sql","line":6,"note":"the migration drops the customer index"}]}],"coveragePct":100,"reviewedBlocks":1,"totalBlocks":1,"fileReview":{"file":"src/orders/orderRepository.ts","risk":"low","summary":"The new customer query is a useful capability, but it uses SELECT * with no pagination and sorts on a column that has no supporting index.","blocks":[{"id":"B1","assessment":"concern","summary":"The query returns all columns and every row for a customer, orders only by created_at, and has no limit."}]},"content":{"old":"import { db } from \"../db/client\";\n\nexport interface Order {\n  id: string;\n  customerId: string;\n  totalCents: number;\n  status: \"pending\" | \"paid\" | \"cancelled\";\n}\n\nexport class OrderRepository {\n  async findById(id: string): Promise\u003cOrder | null> {\n    const rows = await db.query\u003cOrder>(\"SELECT * FROM orders WHERE id = $1\", [id]);\n    return rows[0] ?? null;\n  }\n\n  async save(order: Order): Promise\u003cvoid> {\n    await db.query(\"UPDATE orders SET status = $1, total_cents = $2 WHERE id = $3\", [\n      order.status,\n      order.totalCents,\n      order.id,\n    ]);\n  }\n}\n","new":"import { db } from \"../db/client\";\n\nexport interface Order {\n  id: string;\n  customerId: string;\n  totalCents: number;\n  status: \"pending\" | \"paid\" | \"cancelled\";\n}\n\nexport class OrderRepository {\n  async findById(id: string): Promise\u003cOrder | null> {\n    const rows = await db.query\u003cOrder>(\"SELECT * FROM orders WHERE id = $1\", [id]);\n    return rows[0] ?? null;\n  }\n\n  async save(order: Order): Promise\u003cvoid> {\n    await db.query(\"UPDATE orders SET status = $1, total_cents = $2 WHERE id = $3\", [\n      order.status,\n      order.totalCents,\n      order.id,\n    ]);\n  }\n\n  async findByCustomer(customerId: string): Promise\u003cOrder[]> {\n    return db.query(`SELECT * FROM orders WHERE customer_id = '${customerId}' ORDER BY created_at DESC`);\n  }\n}\n"}},{"id":"f7","path":"src/orders/orderService.ts","oldPath":null,"status":"modified","statusCode":"M","language":"typescript","binary":false,"tooLarge":false,"contentOmitted":false,"additions":62,"deletions":1,"oldBytes":566,"newBytes":2632,"lineCount":{"old":15,"new":76},"lenses":["database","solid","fowler"],"lensReasons":{"solid":"always applied to source files","fowler":"always applied to source files","database":"content matches /\\b(SELECT|INSERT\\s+INTO|UPDATE\\s+[\\w.\"`]+\\s+SET|DELETE\\s+FROM|CREATE\\s+TABLE|ALTER\\s+TABLE|DROP\\s+TABLE|CREATE\\s+INDEX|JOIN\\s+[\\w.\"`]+)\\b/"},"warnings":[],"blocks":[{"id":"B1","startLine":1,"endLine":13,"oldStart":1,"oldEnd":4,"newStart":1,"newEnd":76,"side":"new","hunkIds":["H1"],"addedLines":[1,5,6,7,8,9,10,12,13],"deletedLines":[],"additions":9,"deletions":0,"additionsTotal":9,"deletionsTotal":0,"header":"@@ -1,15 +1,76 @@","section":"","oversized":false,"assessment":"concern","assessmentSummary":"The transport is constructed inside the service and the notification body is formatted here.","findings":[{"id":"F-010","file":"src/orders/orderService.ts","blockId":"B1","side":"new","startLine":5,"endLine":12,"severity":"medium","lens":"solid","tags":["SRP","DIP","testability"],"title":"OrderService owns its SMTP transport and formats the receipt","detail":"The service constructs a concrete SmtpEmailClient, depends on it directly, and builds the email body inside checkout. That couples the money path to a transport and makes the service hard to test without sending mail.","suggestion":"Inject a narrow Notifier interface, keep transport construction at the composition edge, and move receipt formatting into a template or presenter.","suggestionCode":"","confidence":"high","evidence":[{"path":"src/notifications/email.ts","line":null,"note":"the transport already exists as a small adapter"}]}]},{"id":"B2","startLine":14,"endLine":31,"oldStart":3,"oldEnd":7,"newStart":1,"newEnd":76,"side":"new","hunkIds":["H1"],"addedLines":[16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31],"deletedLines":[],"additions":16,"deletions":0,"additionsTotal":16,"deletionsTotal":0,"header":"@@ -1,15 +1,76 @@","section":"","oversized":false,"assessment":"needs-work","assessmentSummary":"Checkout prices the cart with one query per item, mixes floating-point money with a hardcoded tax rate, and interpolates request data into SQL.","findings":[{"id":"F-002","file":"src/orders/orderService.ts","blockId":"B2","side":"new","startLine":21,"endLine":21,"severity":"high","lens":"security","tags":["sql-injection","input-boundary"],"title":"OrderService still interpolates cart, customer, and refund values into SQL","detail":"The checkout product and customer lookups still use template strings, and OrderService. refund still builds its statements the same way. The refundService helper was fixed, but the duplicate path in this service was not.","suggestion":"Use bound parameters for every value, as OrderRepository. findById already does. Keep SQL text static and pass values in the params array.","suggestionCode":"","confidence":"high","evidence":[{"path":"src/orders/orderRepository.ts","line":11,"note":"the existing repository shows the parameterized pattern"}]},{"id":"F-007","file":"src/orders/orderService.ts","blockId":"B2","side":"new","startLine":20,"endLine":29,"severity":"medium","lens":"performance","tags":["n+1","round-trips"],"title":"Checkout issues one product query per cart line","detail":"Each line item runs a separate SELECT inside the loop. A cart with twenty lines produces twenty round trips before the order is written. The product data is independent and can be fetched in one query.","suggestion":"Collect the product ids and fetch them with a single parameterized IN query. Map the rows back to the cart in memory.","suggestionCode":"","confidence":"high","evidence":[]}]},{"id":"B3","startLine":32,"endLine":55,"oldStart":6,"oldEnd":12,"newStart":1,"newEnd":76,"side":"new","hunkIds":["H1"],"addedLines":[32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55],"deletedLines":[12],"additions":24,"deletions":1,"additionsTotal":24,"deletionsTotal":1,"header":"@@ -1,15 +1,76 @@","section":"","oversized":false,"assessment":"needs-work","assessmentSummary":"Checkout still saves the order before payment and swallows the failure. The PII log is gone, but the consistency bug remains.","findings":[{"id":"F-001","file":"src/orders/orderService.ts","blockId":"B3","side":"new","startLine":42,"endLine":53,"severity":"blocker","lens":"database","tags":["transactions","consistency","swallowed-error"],"title":"Checkout persists the order before payment and swallows payment failures","detail":"The order is saved before the payment insert, and the catch block only logs. If payment or email fails, the caller still receives a successful checkout response while the order is already persisted.","suggestion":"Open one transaction, create the order and payment inside it, and commit only after both succeed. Move the email to an outbox or post-commit job.","suggestionCode":"","confidence":"high","evidence":[{"path":"db/schema.sql","line":11,"note":"orders and payments are separate tables with no cross-write boundary"},{"path":"src/orders/orderService.ts","line":51,"note":"catch block logs and continues"}]},{"id":"F-008","file":"src/orders/orderService.ts","blockId":"B3","side":"new","startLine":32,"endLine":33,"severity":"medium","lens":"fowler","tags":["primitive-obsession","magic-number","rounding"],"title":"Money is accumulated as floating-point cents with a magic tax rate","detail":"The total is a JavaScript number, tax is a hardcoded 20% multiplied into it, and individual line totals are stored as floating-point values. Rounding behavior is implicit. The tax rate cannot vary by jurisdiction or be tested.","suggestion":"Represent money as integer minor units, keep the tax rate in configuration, round once at the boundary, and cover the calculation with table-driven tests.","suggestionCode":"","confidence":"high","evidence":[]}]},{"id":"B4","startLine":56,"endLine":76,"oldStart":11,"oldEnd":15,"newStart":1,"newEnd":76,"side":"new","hunkIds":["H1"],"addedLines":[56,57,58,62,67,68,69,70,71,72,73,74,75],"deletedLines":[12],"additions":13,"deletions":1,"additionsTotal":13,"deletionsTotal":1,"header":"@@ -1,15 +1,76 @@","section":"","oversized":false,"assessment":"concern","assessmentSummary":"Cancel is restored. The refund implementation still duplicates refundService and repeats the unparameterized SQL pattern.","findings":[{"id":"F-011","file":"src/orders/orderService.ts","blockId":"B4","side":"new","startLine":68,"endLine":74,"severity":"medium","lens":"fowler","tags":["duplicate-code","shotgun-surgery"],"title":"Refund logic is duplicated in OrderService and refundService","detail":"Both refund implementations look up the order, compare the amount, update the total, and insert a refund. They use different signatures and one is already exposed through a second route. Future fixes will have to land in both places.","suggestion":"Keep one refund module with a clear contract, call it from both entry points, and delete the duplicate implementation.","suggestionCode":"","confidence":"high","evidence":[{"path":"src/orders/refundService.ts","line":null,"note":"second implementation of the same four steps"}]}]}],"fileLevelFindings":[],"findings":[{"id":"F-001","file":"src/orders/orderService.ts","blockId":"B3","side":"new","startLine":42,"endLine":53,"severity":"blocker","lens":"database","tags":["transactions","consistency","swallowed-error"],"title":"Checkout persists the order before payment and swallows payment failures","detail":"The order is saved before the payment insert, and the catch block only logs. If payment or email fails, the caller still receives a successful checkout response while the order is already persisted.","suggestion":"Open one transaction, create the order and payment inside it, and commit only after both succeed. Move the email to an outbox or post-commit job.","suggestionCode":"","confidence":"high","evidence":[{"path":"db/schema.sql","line":11,"note":"orders and payments are separate tables with no cross-write boundary"},{"path":"src/orders/orderService.ts","line":51,"note":"catch block logs and continues"}]},{"id":"F-002","file":"src/orders/orderService.ts","blockId":"B2","side":"new","startLine":21,"endLine":21,"severity":"high","lens":"security","tags":["sql-injection","input-boundary"],"title":"OrderService still interpolates cart, customer, and refund values into SQL","detail":"The checkout product and customer lookups still use template strings, and OrderService. refund still builds its statements the same way. The refundService helper was fixed, but the duplicate path in this service was not.","suggestion":"Use bound parameters for every value, as OrderRepository. findById already does. Keep SQL text static and pass values in the params array.","suggestionCode":"","confidence":"high","evidence":[{"path":"src/orders/orderRepository.ts","line":11,"note":"the existing repository shows the parameterized pattern"}]},{"id":"F-010","file":"src/orders/orderService.ts","blockId":"B1","side":"new","startLine":5,"endLine":12,"severity":"medium","lens":"solid","tags":["SRP","DIP","testability"],"title":"OrderService owns its SMTP transport and formats the receipt","detail":"The service constructs a concrete SmtpEmailClient, depends on it directly, and builds the email body inside checkout. That couples the money path to a transport and makes the service hard to test without sending mail.","suggestion":"Inject a narrow Notifier interface, keep transport construction at the composition edge, and move receipt formatting into a template or presenter.","suggestionCode":"","confidence":"high","evidence":[{"path":"src/notifications/email.ts","line":null,"note":"the transport already exists as a small adapter"}]},{"id":"F-007","file":"src/orders/orderService.ts","blockId":"B2","side":"new","startLine":20,"endLine":29,"severity":"medium","lens":"performance","tags":["n+1","round-trips"],"title":"Checkout issues one product query per cart line","detail":"Each line item runs a separate SELECT inside the loop. A cart with twenty lines produces twenty round trips before the order is written. The product data is independent and can be fetched in one query.","suggestion":"Collect the product ids and fetch them with a single parameterized IN query. Map the rows back to the cart in memory.","suggestionCode":"","confidence":"high","evidence":[]},{"id":"F-008","file":"src/orders/orderService.ts","blockId":"B3","side":"new","startLine":32,"endLine":33,"severity":"medium","lens":"fowler","tags":["primitive-obsession","magic-number","rounding"],"title":"Money is accumulated as floating-point cents with a magic tax rate","detail":"The total is a JavaScript number, tax is a hardcoded 20% multiplied into it, and individual line totals are stored as floating-point values. Rounding behavior is implicit. The tax rate cannot vary by jurisdiction or be tested.","suggestion":"Represent money as integer minor units, keep the tax rate in configuration, round once at the boundary, and cover the calculation with table-driven tests.","suggestionCode":"","confidence":"high","evidence":[]},{"id":"F-011","file":"src/orders/orderService.ts","blockId":"B4","side":"new","startLine":68,"endLine":74,"severity":"medium","lens":"fowler","tags":["duplicate-code","shotgun-surgery"],"title":"Refund logic is duplicated in OrderService and refundService","detail":"Both refund implementations look up the order, compare the amount, update the total, and insert a refund. They use different signatures and one is already exposed through a second route. Future fixes will have to land in both places.","suggestion":"Keep one refund module with a clear contract, call it from both entry points, and delete the duplicate implementation.","suggestionCode":"","confidence":"high","evidence":[{"path":"src/orders/refundService.ts","line":null,"note":"second implementation of the same four steps"}]}],"coveragePct":100,"reviewedBlocks":4,"totalBlocks":4,"fileReview":{"file":"src/orders/orderService.ts","risk":"high","summary":"The cancel behavior and PII logging are fixed. Checkout still persists before payment and swallows the failure, so the money path remains blocked.","blocks":[{"id":"B1","assessment":"concern","summary":"The transport is constructed inside the service and the notification body is formatted here."},{"id":"B2","assessment":"needs-work","summary":"Checkout prices the cart with one query per item, mixes floating-point money with a hardcoded tax rate, and interpolates request data into SQL."},{"id":"B3","assessment":"needs-work","summary":"Checkout still saves the order before payment and swallows the failure. The PII log is gone, but the consistency bug remains."},{"id":"B4","assessment":"concern","summary":"Cancel is restored. The refund implementation still duplicates refundService and repeats the unparameterized SQL pattern."}]},"content":{"old":"import { Order, OrderRepository } from \"./orderRepository\";\nimport { sendEmail } from \"../notifications/email\";\n\nexport class OrderService {\n  constructor(private readonly orders: OrderRepository) {}\n\n  async cancel(orderId: string): Promise\u003cOrder> {\n    const order = await this.orders.findById(orderId);\n    if (!order) throw new Error(\"Order not found\");\n    order.status = \"cancelled\";\n    await this.orders.save(order);\n    await sendEmail({ to: order.customerId, subject: \"Order cancelled\", body: `Order ${order.id} was cancelled.` });\n    return order;\n  }\n}\n","new":"import { db } from \"../db/client\";\nimport { Order, OrderRepository } from \"./orderRepository\";\nimport { sendEmail } from \"../notifications/email\";\n\nexport class SmtpEmailClient {\n  async send(to: string, subject: string, body: string) {\n    return sendEmail({ to, subject, body });\n  }\n}\n\nexport class OrderService {\n  private readonly emailClient = new SmtpEmailClient();\n\n  constructor(private readonly orders: OrderRepository) {}\n\n  async checkout(customerId: string, cart: any): Promise\u003cany> {\n    let total = 0;\n    const lines = [];\n\n    for (const item of cart.items) {\n      const product = await db.query(`SELECT * FROM products WHERE id = '${item.productId}'`);\n      if (!product) {\n        throw new Error(\"Missing product\");\n      }\n      if (item.quantity \u003c= 0) {\n        throw new Error(\"Quantity must be positive\");\n      }\n      total += product.price_cents * item.quantity;\n      lines.push({ name: product.name, total: product.price_cents * item.quantity });\n    }\n\n    const tax = total * 0.2;\n    total = total + tax;\n\n    const order: Order = {\n      id: crypto.randomUUID(),\n      customerId,\n      totalCents: total,\n      status: \"pending\",\n    };\n\n    await this.orders.save(order);\n\n    try {\n      const payment = await db.query(`INSERT INTO payments (order_id, amount) VALUES ('${order.id}', ${total})`);\n      if (!payment) {\n        throw new Error(\"Payment failed\");\n      }\n      const customer = await db.query(`SELECT email FROM customers WHERE id = '${customerId}'`);\n      const body = \"Thanks for your order!\\n\" + lines.map((line) => `${line.name}: ${line.total / 100}`).join(\"\\n\") + `\\nTax: ${tax / 100}`;\n      await this.emailClient.send(customer.email, \"Your order\", body);\n    } catch (error) {\n      console.log(\"checkout failed\", error);\n    }\n\n    return { order, lines };\n  }\n\n  async cancel(orderId: string): Promise\u003cOrder> {\n    const order = await this.orders.findById(orderId);\n    if (!order) throw new Error(\"Order not found\");\n    if (order.status === \"cancelled\") return order;\n    order.status = \"cancelled\";\n    await this.orders.save(order);\n    return order;\n  }\n\n  async refund(orderId: string, amount: number): Promise\u003cany> {\n    const order = await db.query(`SELECT * FROM orders WHERE id = '${orderId}'`);\n    if (!order) throw new Error(\"Order not found\");\n    if (order.total_cents \u003c amount) throw new Error(\"Refund exceeds total\");\n    await db.query(`UPDATE orders SET total_cents = total_cents - ${amount} WHERE id = '${orderId}'`);\n    await db.query(`INSERT INTO refunds (order_id, amount) VALUES ('${orderId}', ${amount})`);\n    return { order, amount };\n  }\n}\n"}},{"id":"f8","path":"src/orders/refundService.ts","oldPath":null,"status":"added","statusCode":"A","language":"typescript","binary":false,"tooLarge":false,"contentOmitted":false,"additions":20,"deletions":0,"oldBytes":0,"newBytes":721,"lineCount":{"old":0,"new":20},"lenses":["database","solid","fowler"],"lensReasons":{"solid":"always applied to source files","fowler":"always applied to source files","database":"content matches /\\b(SELECT|INSERT\\s+INTO|UPDATE\\s+[\\w.\"`]+\\s+SET|DELETE\\s+FROM|CREATE\\s+TABLE|ALTER\\s+TABLE|DROP\\s+TABLE|CREATE\\s+INDEX|JOIN\\s+[\\w.\"`]+)\\b/"},"warnings":[],"blocks":[{"id":"B1","startLine":1,"endLine":20,"oldStart":1,"oldEnd":1,"newStart":1,"newEnd":20,"side":"new","hunkIds":["H1"],"addedLines":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],"deletedLines":[],"additions":20,"deletions":0,"additionsTotal":20,"deletionsTotal":0,"header":"@@ -0,0 +1,20 @@","section":"","oversized":false,"assessment":"needs-work","assessmentSummary":"Parameters and FOR UPDATE are improvements. BEGIN and COMMIT are issued through a pooled client, and the refund has no idempotency key.","findings":[{"id":"F-017","file":"src/orders/refundService.ts","blockId":"B1","side":"new","startLine":4,"endLine":14,"severity":"high","lens":"database","tags":["connection-pool","transactions","locking"],"title":"BEGIN and COMMIT go through a pooled client and may use different connections","detail":"The manual transaction issues BEGIN, the locked SELECT, the UPDATE, and COMMIT as separate calls on the pool. A pool can hand each call a different connection, so the transaction boundaries are not guaranteed.","suggestion":"Expose a transaction callback on the database client that pins one connection, or use the pool's dedicated checkout API. Do not send BEGIN/COMMIT through generic query calls.","suggestionCode":"","confidence":"high","evidence":[]},{"id":"F-018","file":"src/orders/refundService.ts","blockId":"B1","side":"new","startLine":3,"endLine":15,"severity":"medium","lens":"database","tags":["idempotency","retries"],"title":"Refund is still not idempotent","detail":"The row lock prevents a concurrent double-spend, but a retry after a committed refund will subtract the amount again because there is no idempotency key or unique refund record keyed by request id.","suggestion":"Add a unique idempotency key to refunds, check it inside the same transaction, and return the existing refund for a retry.","suggestionCode":"","confidence":"high","evidence":[]}]}],"fileLevelFindings":[],"findings":[{"id":"F-017","file":"src/orders/refundService.ts","blockId":"B1","side":"new","startLine":4,"endLine":14,"severity":"high","lens":"database","tags":["connection-pool","transactions","locking"],"title":"BEGIN and COMMIT go through a pooled client and may use different connections","detail":"The manual transaction issues BEGIN, the locked SELECT, the UPDATE, and COMMIT as separate calls on the pool. A pool can hand each call a different connection, so the transaction boundaries are not guaranteed.","suggestion":"Expose a transaction callback on the database client that pins one connection, or use the pool's dedicated checkout API. Do not send BEGIN/COMMIT through generic query calls.","suggestionCode":"","confidence":"high","evidence":[]},{"id":"F-018","file":"src/orders/refundService.ts","blockId":"B1","side":"new","startLine":3,"endLine":15,"severity":"medium","lens":"database","tags":["idempotency","retries"],"title":"Refund is still not idempotent","detail":"The row lock prevents a concurrent double-spend, but a retry after a committed refund will subtract the amount again because there is no idempotency key or unique refund record keyed by request id.","suggestion":"Add a unique idempotency key to refunds, check it inside the same transaction, and return the existing refund for a retry.","suggestionCode":"","confidence":"high","evidence":[]}],"coveragePct":100,"reviewedBlocks":1,"totalBlocks":1,"fileReview":{"file":"src/orders/refundService.ts","risk":"high","summary":"The refund helper now binds parameters and locks the order row. The transaction is still issued through pooled query calls, so BEGIN/COMMIT is not guaranteed to use one connection, and retries are not idempotent.","blocks":[{"id":"B1","assessment":"needs-work","summary":"Parameters and FOR UPDATE are improvements. BEGIN and COMMIT are issued through a pooled client, and the refund has no idempotency key."}]},"content":{"old":"","new":"import { db } from \"../db/client\";\n\nexport async function refundOrder(orderId: string, amount: number) {\n  await db.query(\"BEGIN\");\n  try {\n    const [order] = await db.query(\"SELECT * FROM orders WHERE id = $1 FOR UPDATE\", [orderId]);\n    if (!order) throw new Error(\"not found\");\n    if (order.total_cents \u003c amount) throw new Error(\"too much\");\n    await db.query(\"UPDATE orders SET total_cents = total_cents - $1 WHERE id = $2\", [amount, orderId]);\n    const [refund] = await db.query(\n      \"INSERT INTO refunds (order_id, amount) VALUES ($1, $2) RETURNING *\",\n      [orderId, amount],\n    );\n    await db.query(\"COMMIT\");\n    return refund;\n  } catch (error) {\n    await db.query(\"ROLLBACK\");\n    throw error;\n  }\n}\n"}},{"id":"f9","path":"src/utils/formatMoney.ts","oldPath":null,"status":"added","statusCode":"A","language":"typescript","binary":false,"tooLarge":false,"contentOmitted":false,"additions":3,"deletions":0,"oldBytes":0,"newBytes":173,"lineCount":{"old":0,"new":3},"lenses":["solid","fowler"],"lensReasons":{"solid":"always applied to source files","fowler":"always applied to source files"},"warnings":[],"blocks":[{"id":"B1","startLine":1,"endLine":3,"oldStart":1,"oldEnd":1,"newStart":1,"newEnd":3,"side":"new","hunkIds":["H1"],"addedLines":[1,2,3],"deletedLines":[],"additions":3,"deletions":0,"additionsTotal":3,"deletionsTotal":0,"header":"@@ -0,0 +1,3 @@","section":"","oversized":false,"assessment":"sound","assessmentSummary":"No call sites outside the repository were found. The rename and formatting change are safe.","findings":[]}],"fileLevelFindings":[],"findings":[],"coveragePct":100,"reviewedBlocks":1,"totalBlocks":1,"fileReview":{"file":"src/utils/formatMoney.ts","risk":"low","summary":"The rename is internal and the formatter is an improvement. No open issue.","blocks":[{"id":"B1","assessment":"sound","summary":"No call sites outside the repository were found. The rename and formatting change are safe."}]},"content":{"old":"","new":"export function formatMoney(cents: number, locale = \"en-US\"): string {\n  return new Intl.NumberFormat(locale, { style: \"currency\", currency: \"USD\" }).format(cents / 100);\n}\n"}},{"id":"f10","path":"src/utils/money.ts","oldPath":null,"status":"deleted","statusCode":"D","language":"typescript","binary":false,"tooLarge":false,"contentOmitted":false,"additions":0,"deletions":3,"oldBytes":96,"newBytes":0,"lineCount":{"old":3,"new":0},"lenses":["solid","fowler"],"lensReasons":{"solid":"always applied to source files","fowler":"always applied to source files"},"warnings":[],"blocks":[{"id":"B1","startLine":1,"endLine":3,"oldStart":1,"oldEnd":3,"newStart":1,"newEnd":1,"side":"old","hunkIds":["H1"],"addedLines":[],"deletedLines":[1,2,3],"additions":0,"deletions":3,"additionsTotal":0,"deletionsTotal":3,"header":"@@ -1,3 +0,0 @@","section":"","oversized":false,"assessment":"sound","assessmentSummary":"The old formatter is removed as part of the rename. No issue.","findings":[]}],"fileLevelFindings":[],"findings":[],"coveragePct":100,"reviewedBlocks":1,"totalBlocks":1,"fileReview":{"file":"src/utils/money.ts","risk":"low","summary":"The old money helper was replaced by the renamed formatter. The deletion itself is safe.","blocks":[{"id":"B1","assessment":"sound","summary":"The old formatter is removed as part of the rename. No issue."}]},"content":{"old":"export function formatMoney(cents: number): string {\n  return `$${(cents / 100).toFixed(2)}`;\n}\n","new":""}}],"findings":[{"id":"F-001","file":"src/orders/orderService.ts","blockId":"B3","side":"new","startLine":42,"endLine":53,"severity":"blocker","lens":"database","tags":["transactions","consistency","swallowed-error"],"title":"Checkout persists the order before payment and swallows payment failures","detail":"The order is saved before the payment insert, and the catch block only logs. If payment or email fails, the caller still receives a successful checkout response while the order is already persisted.","suggestion":"Open one transaction, create the order and payment inside it, and commit only after both succeed. Move the email to an outbox or post-commit job.","suggestionCode":"","confidence":"high","evidence":[{"path":"db/schema.sql","line":11,"note":"orders and payments are separate tables with no cross-write boundary"},{"path":"src/orders/orderService.ts","line":51,"note":"catch block logs and continues"}],"fileStatus":"modified","language":"typescript"},{"id":"F-017","file":"src/orders/refundService.ts","blockId":"B1","side":"new","startLine":4,"endLine":14,"severity":"high","lens":"database","tags":["connection-pool","transactions","locking"],"title":"BEGIN and COMMIT go through a pooled client and may use different connections","detail":"The manual transaction issues BEGIN, the locked SELECT, the UPDATE, and COMMIT as separate calls on the pool. A pool can hand each call a different connection, so the transaction boundaries are not guaranteed.","suggestion":"Expose a transaction callback on the database client that pins one connection, or use the pool's dedicated checkout API. Do not send BEGIN/COMMIT through generic query calls.","suggestionCode":"","confidence":"high","evidence":[],"fileStatus":"added","language":"typescript"},{"id":"F-004","file":"src/api/orders.ts","blockId":"B1","side":"new","startLine":8,"endLine":20,"severity":"high","lens":"security","tags":["authorization","idor","validation"],"title":"Checkout and refund routes trust unauthenticated request bodies","detail":"The routes pass customerId and amount straight from req. body into money-moving service calls.","suggestion":"Authenticate the request, derive the customer from the session rather than the body, validate amounts with a schema, and check order ownership before calling the service.","suggestionCode":"","confidence":"high","evidence":[{"path":"src/api/orders.ts","line":7,"note":"customerId comes from req.body"},{"path":"src/orders/orderService.ts","line":51,"note":"refund accepts an unbounded amount"}],"fileStatus":"modified","language":"typescript"},{"id":"F-002","file":"src/orders/orderService.ts","blockId":"B2","side":"new","startLine":21,"endLine":21,"severity":"high","lens":"security","tags":["sql-injection","input-boundary"],"title":"OrderService still interpolates cart, customer, and refund values into SQL","detail":"The checkout product and customer lookups still use template strings, and OrderService. refund still builds its statements the same way. The refundService helper was fixed, but the duplicate path in this service was not.","suggestion":"Use bound parameters for every value, as OrderRepository. findById already does. Keep SQL text static and pass values in the params array.","suggestionCode":"","confidence":"high","evidence":[{"path":"src/orders/orderRepository.ts","line":11,"note":"the existing repository shows the parameterized pattern"}],"fileStatus":"modified","language":"typescript"},{"id":"F-012","file":"src/orders/checkout.test.ts","blockId":"B1","side":"new","startLine":3,"endLine":6,"severity":"medium","lens":"testing","tags":["coverage","fake-db","failure-path"],"title":"The checkout test asserts truthiness and cannot catch the new failure modes","detail":"The test passes an empty repository and a cart with no items, then asserts that the result exists. It never verifies the order total, status, payment, or failure behavior, and it will not catch the transaction or validation regressions.","suggestion":"Use a fake database or repository to assert the total, status, and post-commit notification. Add a failing payment case and a duplicate-submit case.","suggestionCode":"","confidence":"high","evidence":[],"fileStatus":"added","language":"typescript"},{"id":"F-018","file":"src/orders/refundService.ts","blockId":"B1","side":"new","startLine":3,"endLine":15,"severity":"medium","lens":"database","tags":["idempotency","retries"],"title":"Refund is still not idempotent","detail":"The row lock prevents a concurrent double-spend, but a retry after a committed refund will subtract the amount again because there is no idempotency key or unique refund record keyed by request id.","suggestion":"Add a unique idempotency key to refunds, check it inside the same transaction, and return the existing refund for a retry.","suggestionCode":"","confidence":"high","evidence":[],"fileStatus":"added","language":"typescript"},{"id":"F-010","file":"src/orders/orderService.ts","blockId":"B1","side":"new","startLine":5,"endLine":12,"severity":"medium","lens":"solid","tags":["SRP","DIP","testability"],"title":"OrderService owns its SMTP transport and formats the receipt","detail":"The service constructs a concrete SmtpEmailClient, depends on it directly, and builds the email body inside checkout. That couples the money path to a transport and makes the service hard to test without sending mail.","suggestion":"Inject a narrow Notifier interface, keep transport construction at the composition edge, and move receipt formatting into a template or presenter.","suggestionCode":"","confidence":"high","evidence":[{"path":"src/notifications/email.ts","line":null,"note":"the transport already exists as a small adapter"}],"fileStatus":"modified","language":"typescript"},{"id":"F-019","file":"db/migrations/004_add_order_status.sql","blockId":"B1","side":"new","startLine":5,"endLine":6,"severity":"medium","lens":"database","tags":["locking","backfill","rollback","expand-contract"],"title":"The bigint type change and backfill still take a write lock","detail":"Preserving the customer index and making the status index concurrent are improvements. The in-place total_cents type change still rewrites the table, and the status backfill runs as one unbounded UPDATE with no rollback or batched plan.","suggestion":"Add the new column or type in an expand step, backfill in bounded batches with progress tracking, switch reads, then contract. Keep a reversible step for each deploy.","suggestionCode":"","confidence":"high","evidence":[],"fileStatus":"added","language":"sql"},{"id":"F-007","file":"src/orders/orderService.ts","blockId":"B2","side":"new","startLine":20,"endLine":29,"severity":"medium","lens":"performance","tags":["n+1","round-trips"],"title":"Checkout issues one product query per cart line","detail":"Each line item runs a separate SELECT inside the loop. A cart with twenty lines produces twenty round trips before the order is written. The product data is independent and can be fetched in one query.","suggestion":"Collect the product ids and fetch them with a single parameterized IN query. Map the rows back to the cart in memory.","suggestionCode":"","confidence":"high","evidence":[],"fileStatus":"modified","language":"typescript"},{"id":"F-008","file":"src/orders/orderService.ts","blockId":"B3","side":"new","startLine":32,"endLine":33,"severity":"medium","lens":"fowler","tags":["primitive-obsession","magic-number","rounding"],"title":"Money is accumulated as floating-point cents with a magic tax rate","detail":"The total is a JavaScript number, tax is a hardcoded 20% multiplied into it, and individual line totals are stored as floating-point values. Rounding behavior is implicit. The tax rate cannot vary by jurisdiction or be tested.","suggestion":"Represent money as integer minor units, keep the tax rate in configuration, round once at the boundary, and cover the calculation with table-driven tests.","suggestionCode":"","confidence":"high","evidence":[],"fileStatus":"modified","language":"typescript"},{"id":"F-011","file":"src/orders/orderService.ts","blockId":"B4","side":"new","startLine":68,"endLine":74,"severity":"medium","lens":"fowler","tags":["duplicate-code","shotgun-surgery"],"title":"Refund logic is duplicated in OrderService and refundService","detail":"Both refund implementations look up the order, compare the amount, update the total, and insert a refund. They use different signatures and one is already exposed through a second route. Future fixes will have to land in both places.","suggestion":"Keep one refund module with a clear contract, call it from both entry points, and delete the duplicate implementation.","suggestionCode":"","confidence":"high","evidence":[{"path":"src/orders/refundService.ts","line":null,"note":"second implementation of the same four steps"}],"fileStatus":"modified","language":"typescript"},{"id":"F-013","file":"src/orders/orderRepository.ts","blockId":"B1","side":"new","startLine":24,"endLine":25,"severity":"low","lens":"database","tags":["select-star","pagination","index"],"title":"Customer query returns every column and every row","detail":"The new query selects all columns and all orders for a customer, with no limit, and orders by created_at while the migration drops the only customer index. It will not scale with order history.","suggestion":"Select only the columns the caller needs, add pagination or a bounded limit, and add a composite index on (customer_id, created_at DESC).","suggestionCode":"","confidence":"high","evidence":[{"path":"db/migrations/004_add_order_status.sql","line":6,"note":"the migration drops the customer index"}],"fileStatus":"modified","language":"typescript"},{"id":"F-016","file":"src/legacy/legacyPricing.ts","blockId":"B1","side":"old","startLine":1,"endLine":2,"severity":"praise","lens":"fowler","tags":["deletion","simplification"],"title":"Removing the legacy pricing helper is a clean win","detail":"The old helper duplicated tax logic with a magic multiplier and had no tests. Deleting it reduces the number of pricing paths and removes a source of drift.","suggestion":"No action needed; keep the new formatter as the single formatting path.","suggestionCode":"","confidence":"high","evidence":[],"fileStatus":"deleted","language":"typescript"}],"flow":{"title":"Checkout and refund flow","subtitle":"Two entry points, two refund paths, four tables, and one email.","nodes":[{"id":"checkout-api","label":"POST /checkout","kind":"input","detail":"Public route; body-driven customer and cart.","files":["src/api/orders.ts"],"findingIds":["F-004"],"layer":0},{"id":"refund-api","label":"POST /:id/refund","kind":"input","detail":"Public route; body-driven amount.","files":["src/api/orders.ts"],"findingIds":["F-004"],"layer":0},{"id":"migration","label":"Migration 004","kind":"store","detail":"Adds status, changes total_cents to bigint, changes indexes.","files":["db/migrations/004_add_order_status.sql"],"findingIds":["F-019"],"layer":0},{"id":"checkout-service","label":"OrderService.checkout","kind":"transform","detail":"Prices the cart, saves the order, charges, and emails.","files":["src/orders/orderService.ts"],"findingIds":["F-001","F-002","F-007","F-008","F-010"],"layer":1},{"id":"refund-service","label":"Refund path","kind":"transform","detail":"Two implementations: OrderService.refund and refundOrder.","files":["src/orders/orderService.ts","src/orders/refundService.ts"],"findingIds":["F-011","F-017","F-018"],"layer":1},{"id":"repo-query","label":"findByCustomer","kind":"transform","detail":"New customer order lookup.","files":["src/orders/orderRepository.ts"],"findingIds":["F-013"],"layer":1},{"id":"orders-store","label":"orders","kind":"store","detail":"Total, status, and customer index live here.","files":["db/schema.sql"],"findingIds":["F-001","F-019"],"layer":2},{"id":"payments-store","label":"payments","kind":"store","detail":"Payment is inserted after the order save.","files":["db/schema.sql"],"findingIds":["F-001"],"layer":2},{"id":"refunds-store","label":"refunds","kind":"store","detail":"Refund records are inserted without an idempotency key.","files":["db/schema.sql"],"findingIds":["F-017","F-018"],"layer":2},{"id":"email","label":"SMTP receipt","kind":"external","detail":"Receipt formatting and transport inside the service.","files":["src/notifications/email.ts"],"findingIds":["F-010"],"layer":2},{"id":"response","label":"HTTP response","kind":"output","detail":"Success is returned even when payment fails.","files":["src/api/orders.ts"],"findingIds":["F-001"],"layer":3}],"edges":[{"from":"checkout-api","to":"checkout-service","label":"customer + cart","kind":"data"},{"from":"checkout-service","to":"orders-store","label":"save order","kind":"data"},{"from":"checkout-service","to":"payments-store","label":"charge","kind":"data"},{"from":"checkout-service","to":"email","label":"receipt","kind":"event"},{"from":"checkout-service","to":"response","label":"returns even on failure","kind":"control"},{"from":"refund-api","to":"refund-service","label":"amount","kind":"data"},{"from":"refund-service","to":"orders-store","label":"debit total","kind":"data"},{"from":"refund-service","to":"refunds-store","label":"record","kind":"data"},{"from":"refund-service","to":"response","label":"refund result","kind":"data"},{"from":"migration","to":"orders-store","label":"status + type","kind":"dependency"},{"from":"migration","to":"repo-query","label":"customer index kept","kind":"dependency"},{"from":"repo-query","to":"orders-store","label":"customer index","kind":"dependency"}],"source":"agent"},"iteration":{"previous":{"id":"20261029-192652-7d61","iteration":1,"verdict":"blocked","headline":"Checkout can take money without leaving a consistent order.","scopeLabel":"working tree vs HEAD","scopeChanged":false},"delta":{"statusById":{"F-001":{"status":"carried","previousId":"F-001","previousSeverity":"blocker","previousTitle":"Checkout persists the order before payment and swallows payment failures"},"F-002":{"status":"changed","previousId":"F-002","previousSeverity":"high","previousTitle":"OrderService interpolates cart, customer, and refund values into SQL"},"F-004":{"status":"carried","previousId":"F-004","previousSeverity":"high","previousTitle":"Checkout and refund routes trust unauthenticated request bodies"},"F-007":{"status":"carried","previousId":"F-007","previousSeverity":"medium","previousTitle":"Checkout issues one product query per cart line"},"F-008":{"status":"carried","previousId":"F-008","previousSeverity":"medium","previousTitle":"Money is accumulated as floating-point cents with a magic tax rate"},"F-010":{"status":"carried","previousId":"F-010","previousSeverity":"medium","previousTitle":"OrderService owns its SMTP transport and formats the receipt"},"F-011":{"status":"carried","previousId":"F-011","previousSeverity":"medium","previousTitle":"Refund logic is duplicated in OrderService and refundService"},"F-012":{"status":"carried","previousId":"F-012","previousSeverity":"medium","previousTitle":"The checkout test asserts truthiness and cannot catch the new failure modes"},"F-013":{"status":"carried","previousId":"F-013","previousSeverity":"low","previousTitle":"Customer query returns every column and every row"},"F-016":{"status":"carried","previousId":"F-016","previousSeverity":"praise","previousTitle":"Removing the legacy pricing helper is a clean win"},"F-017":{"status":"new"},"F-018":{"status":"new"},"F-019":{"status":"new"}},"resolved":[{"id":"F-003","file":"src/orders/refundService.ts","blockId":"B1","side":"new","startLine":4,"endLine":9,"severity":"high","lens":"security","tags":["sql-injection","duplicate-logic"],"title":"Refund helper repeats the SQL interpolation pattern","detail":"refundOrder builds the lookup, update, and insert from orderId and amount with template strings. It is a second injection surface in the same change and will drift from OrderService. refund.","suggestion":"Bind orderId and amount as parameters. Consider deleting this helper and keeping one refund implementation rather than maintaining two.","suggestionCode":"","confidence":"high","evidence":[],"resolutionStatus":"fixed","resolutionNote":"The refund helper now binds orderId and amount as parameters."},{"id":"F-005","file":"db/migrations/004_add_order_status.sql","blockId":"B1","side":"new","startLine":1,"endLine":6,"severity":"high","lens":"database","tags":["index","locking","backfill","rollback"],"title":"Migration drops the customer index the new query depends on","detail":"The migration drops orders_customer_id_idx while the new findByCustomer query filters by customer_id and sorts by created_at. On a large table that turns a targeted lookup into a sequential scan.","suggestion":"Keep the customer index until a replacement composite index is live. Run the new index with CREATE INDEX CONCURRENTLY outside a transaction.","suggestionCode":"","confidence":"high","evidence":[{"path":"src/orders/orderRepository.ts","line":25,"note":"findByCustomer filters on customer_id and sorts by created_at"}],"resolutionStatus":"fixed","resolutionNote":"The customer index is preserved and the status index uses CONCURRENTLY; the remaining lock risk is tracked separately."},{"id":"F-006","file":"src/orders/orderService.ts","blockId":"B4","side":"new","startLine":59,"endLine":60,"severity":"high","lens":"correctness","tags":["regression","state-transition"],"title":"cancel always throws and no longer cancels the order","detail":"The previous cancel path loaded the order, set its status to cancelled, saved it, and sent an email. The new path calls refund with Number. MAX_SAFE_INTEGER.","suggestion":"Restore the status transition: load the order, guard the current state, set status to cancelled, save, and enqueue the notification. Do not route cancellation through a refund.","suggestionCode":"","confidence":"high","evidence":[],"resolutionStatus":"fixed","resolutionNote":"Cancel restores the status transition and no longer routes through refund."},{"id":"F-009","file":"src/orders/orderService.ts","blockId":"B2","side":"new","startLine":26,"endLine":26,"severity":"medium","lens":"security","tags":["pii","logging","validation"],"title":"Invalid quantities are logged with the full cart and customer id","detail":"The debug log prints the whole cart and customer identifier, and the code continues after detecting a non-positive quantity. This leaks customer data into logs and lets invalid input reach pricing.","suggestion":"Reject the request with a validation error and use a structured logger with redaction. Do not log payloads that can contain customer data.","suggestionCode":"","confidence":"high","evidence":[],"resolutionStatus":"fixed","resolutionNote":"The PII log was removed; invalid quantities now fail validation."},{"id":"F-014","file":"src/utils/formatMoney.ts","blockId":"B1","side":"new","startLine":1,"endLine":2,"severity":"question","lens":"api","tags":["signature-change","locale"],"title":"Is the new locale parameter part of an external contract?","detail":"The helper was renamed and its signature changed from one argument to two. The implementation is an improvement, but a caller that imports the old path or relies on a fixed default locale will break differently.","suggestion":"Check call sites and release notes. If the helper is internal, keep it simple; if it is public, add a compatibility path or document the signature change.","suggestionCode":"","confidence":"high","evidence":[],"resolutionStatus":"fixed","resolutionNote":"No external call sites were found; the renamed helper is internal."},{"id":"F-015","file":"src/orders/refundService.ts","blockId":"B1","side":"new","startLine":4,"endLine":11,"severity":"medium","lens":"database","tags":["race-condition","transactions","idempotency"],"title":"Refund reads then writes without a lock or transaction","detail":"The helper reads the order total, decides the refund is valid, and then updates it. Two concurrent refund requests can both read the same total and both subtract, producing a double refund. The insert and update are not atomic.","suggestion":"Run the lookup with SELECT . FOR UPDATE inside a transaction, then update and insert before committing. Add an idempotency key so a retry does not refund twice.","suggestionCode":"","confidence":"high","evidence":[],"resolutionStatus":"fixed","resolutionNote":"The refund path now locks the order row inside a transaction; idempotency remains a separate finding."}],"counts":{"new":3,"carried":10,"changed":1,"resolved":6,"unverified":0,"open":13},"code":{"fromRunId":"20261029-192652-7d61","fromIteration":1,"files":[{"path":"assets/logo.png","status":"unknown","additions":0,"deletions":0},{"path":"db/migrations/004_add_order_status.sql","status":"changed","additions":2,"deletions":2},{"path":"src/api/orders.ts","status":"unchanged","additions":0,"deletions":0},{"path":"src/legacy/legacyPricing.ts","status":"unchanged","additions":0,"deletions":0},{"path":"src/orders/checkout.test.ts","status":"unchanged","additions":0,"deletions":0},{"path":"src/orders/orderRepository.ts","status":"unchanged","additions":0,"deletions":0},{"path":"src/orders/orderService.ts","status":"changed","additions":7,"deletions":2},{"path":"src/orders/refundService.ts","status":"changed","additions":16,"deletions":8},{"path":"src/utils/formatMoney.ts","status":"unchanged","additions":0,"deletions":0},{"path":"src/utils/money.ts","status":"unchanged","additions":0,"deletions":0}],"totals":{"filesChanged":3,"additions":25,"deletions":12}},"note":"Fixed cancel, the PII log, refund SQL injection, the dropped customer index, and the refund race. Checkout still needs a transaction. Refunds still need a pinned connection and an idempotency key.","verdictChange":{"from":"blocked","to":"blocked"}},"timeline":[{"id":"20261029-192652-7d61","iteration":1,"createdAt":"2026-10-29T19:26:54.996Z","verdict":"blocked","headline":"Checkout can take money without leaving a consistent order.","findings":{"open":16,"blocker":1,"high":5,"resolved":0,"new":16},"coveragePct":100,"stats":{"files":10,"additions":103,"deletions":11,"blocks":12,"binaryFiles":1},"artifact":".code-review/runs/20261029-192652-7d61/review.html","status":"rendered"},{"id":"20261029-192656-cc7a","iteration":2,"createdAt":"2026-10-29T19:26:58.642Z","verdict":"blocked","headline":"Refunds are safer, but checkout still commits before payment.","findings":{"open":13,"blocker":1,"high":3,"medium":7,"low":1,"nit":0,"question":0,"praise":1,"resolved":6,"new":3,"unverified":0},"coveragePct":100,"stats":{"files":10,"additions":112,"deletions":7,"blocks":12,"textFiles":9,"binaryFiles":1,"byStatus":{"added":5,"modified":3,"deleted":2}},"artifact":".code-review/runs/20261029-192656-cc7a/review.html","status":"rendered","current":true}],"sparkline":[{"iteration":1,"open":16,"resolved":0,"new":16,"verdict":"blocked"},{"iteration":2,"open":13,"resolved":6,"new":3,"verdict":"blocked"}],"coverage":{"totalBlocks":12,"reviewedBlocks":12,"pct":100}},"lensCatalog":{"correctness":{"id":"correctness","label":"Correctness","color":"#ff6b5e","kind":"builtin","doc":null,"description":"Bugs, edge cases, broken contracts, unsafe state, and logic that does not do what it claims."},"security":{"id":"security","label":"Security","color":"#fb7185","kind":"builtin","doc":null,"description":"Trust boundaries, injection, authorization, secrets, unsafe deserialization, and data exposure."},"performance":{"id":"performance","label":"Performance","color":"#fbbf24","kind":"builtin","doc":null,"description":"Hot-path cost, N+1 access, unnecessary work, memory growth, and blocking calls."},"database":{"id":"database","label":"Database","color":"#c084fc","kind":"skill","doc":"references/lenses/database.md","description":"Schema, migrations, query shape, transactions, indexes, locking, backfills, and data safety."},"solid":{"id":"solid","label":"SOLID","color":"#7dd3fc","kind":"skill","doc":"references/lenses/solid.md","description":"Single responsibility, open/closed, Liskov substitution, interface segregation, and dependency inversion."},"fowler":{"id":"fowler","label":"Fowler","color":"#f0abfc","kind":"skill","doc":"references/lenses/fowler.md","description":"Code smells and refactorings from Martin Fowler's Refactoring: long methods, duplication, feature envy, shotgun surgery, and more."},"api":{"id":"api","label":"API & contract","color":"#38bdf8","kind":"builtin","doc":null,"description":"Public interfaces, backward compatibility, error semantics, versioning, and request/response shape."},"testing":{"id":"testing","label":"Testing","color":"#a78bfa","kind":"builtin","doc":null,"description":"Coverage of the changed behavior, meaningful assertions, determinism, and missing failure cases."},"docs":{"id":"docs","label":"Docs","color":"#94a3b8","kind":"builtin","doc":null,"description":"Docs, comments, examples, and contracts that no longer match the code."},"style":{"id":"style","label":"Style","color":"#64748b","kind":"builtin","doc":null,"description":"Readability and local consistency. Use sparingly; formatters and linters own most of this."}},"artifactBase":"../","flags":{"draft":false,"hasPrevious":true}}</script>
+<script src="../../vendor/pierre-diffs.js"></script>
+<script type="module">
+/* ============================================================
+   code-review app — IDE review console
+   Data is injected by scripts/lib/render.mjs.
+   Notes are stored by the local review server.
+   ============================================================ */
+
+const dataEl = document.getElementById("review-data");
+let DATA = null;
+
+function esc(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function fatal(error) {
+  const view = document.getElementById("view");
+  if (!view) return;
+  view.innerHTML = `<div class="load-error"><h2>Review could not load</h2><p>${esc(error?.message || String(error))}</p><pre>${esc(error?.stack || "")}</pre></div>`;
+}
+
+try {
+  const raw = (dataEl?.textContent || "").trim();
+  if (!raw || raw.startsWith("<!--")) throw new Error("No review data. Run render again.");
+  DATA = JSON.parse(raw);
+} catch (error) {
+  fatal(error);
+}
+
+if (DATA) {
+  const FILE_MAP = new Map((DATA.files || []).map((file) => [file.path, file]));
+  const FINDING_MAP = new Map((DATA.findings || []).map((finding) => [finding.id, finding]));
+  const DELTA_STATUS = DATA.iteration?.delta?.statusById || {};
+  const REDUCED = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches || false;
+  const SEVERITY = {
+    blocker: { label: "Blocker", color: "var(--red)", soft: "var(--red-soft)" },
+    high: { label: "High", color: "var(--orange)", soft: "var(--orange-soft)" },
+    medium: { label: "Medium", color: "var(--accent)", soft: "var(--accent-soft)" },
+    low: { label: "Low", color: "var(--blue)", soft: "var(--blue-soft)" },
+    nit: { label: "Nit", color: "var(--purple)", soft: "var(--purple-soft)" },
+    question: { label: "Question", color: "var(--pink)", soft: "var(--pink-soft)" },
+    praise: { label: "Praise", color: "var(--green)", soft: "var(--green-soft)" },
+  };
+  const ASSESSMENT = {
+    sound: { label: "Okay", color: "var(--green)" },
+    concern: { label: "Concern", color: "var(--orange)" },
+    "needs-work": { label: "Needs work", color: "var(--red)" },
+    question: { label: "Question", color: "var(--blue)" },
+    "not-reviewed": { label: "Not reviewed", color: "var(--faint)" },
+  };
+  const VERDICT = {
+    ship: { label: "Ship", color: "var(--green)", icon: "check" },
+    "ship-with-fixes": { label: "Ship with fixes", color: "var(--accent)", icon: "spark" },
+    "needs-work": { label: "Needs work", color: "var(--orange)", icon: "alert" },
+    blocked: { label: "Blocked", color: "var(--red)", icon: "x" },
+  };
+  const STATUS = {
+    added: { label: "Added", color: "var(--green)" },
+    modified: { label: "Modified", color: "var(--orange)" },
+    deleted: { label: "Deleted", color: "var(--red)" },
+    renamed: { label: "Renamed", color: "var(--blue)" },
+    copied: { label: "Copied", color: "var(--purple)" },
+    unmerged: { label: "Unmerged", color: "var(--red)" },
+    unknown: { label: "Changed", color: "var(--faint)" },
+  };
+  const RISK = {
+    low: { label: "Low risk", color: "var(--green)" },
+    medium: { label: "Medium risk", color: "var(--orange)" },
+    high: { label: "High risk", color: "var(--red)" },
+  };
+  const FLOW_KIND = {
+    input: "INPUT", transform: "PROCESS", output: "OUTPUT", store: "STORE",
+    external: "EXTERNAL", decision: "DECISION", event: "EVENT", ui: "UI",
+  };
+  const SEVERITY_ORDER = ["blocker", "high", "medium", "low", "question", "nit", "praise"];
+  const ICONS = {
+    check: '<path d="m5 12 4.5 4.5L19 6.5" stroke-linecap="round" stroke-linejoin="round"/>',
+    alert: '<path d="M12 3 2.8 20h18.4L12 3Z" stroke-linejoin="round"/><path d="M12 9v5" stroke-linecap="round"/><circle cx="12" cy="17.3" r=".8" fill="currentColor" stroke="none"/>',
+    x: '<path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"/>',
+    spark: '<path d="m12 3 1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7L12 3Z" stroke-linejoin="round"/>',
+    overview: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+    file: '<path d="M6 3h8l4 4v14H6z" stroke-linejoin="round"/><path d="M14 3v5h5" stroke-linejoin="round"/>',
+    code: '<path d="m8 8-4 4 4 4M16 8l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/><path d="m13.5 5-3 14" stroke-linecap="round"/>',
+    review: '<path d="M4 5h16v12H8l-4 4V5Z" stroke-linejoin="round"/><path d="M8 9h8M8 13h5" stroke-linecap="round"/>',
+    locate: '<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke-linecap="round"/>',
+    note: '<path d="M5 4h14v12l-4 4H5z" stroke-linejoin="round"/><path d="M15 20v-4h4M8 8h8M8 12h5" stroke-linecap="round"/>',
+    copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4V4h11v1" stroke-linecap="round" stroke-linejoin="round"/>',
+    chevron: '<path d="m9 6 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke-linecap="round"/>',
+    moon: '<path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.5 8.5 0 1 0 10.2 10.2Z" stroke-linejoin="round"/>',
+    external: '<path d="M14 4h6v6M20 4l-8 8" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 14v5H5V6h5" stroke-linecap="round"/>',
+  };
+  const serverToken = new URLSearchParams(location.search).get("token");
+  const draftKey = `code-review:drafts:${DATA.meta.runId}`;
+  const state = {
+    route: null,
+    theme: document.documentElement.dataset.theme || "dark",
+    code: null,
+    annotate: false,
+    currentAnchor: null,
+    drafts: loadDrafts(),
+    notesOpen: false,
+    server: {
+      token: serverToken,
+      connected: false,
+      session: null,
+      error: null,
+      lastJSON: "",
+    },
+    activeBlock: null,
+    libPromise: null,
+    pollTimer: null,
+    toastTimer: null,
+    reloadShown: false,
+  };
+
+  /* ------------------------------------------------------------ helpers */
+  function icon(name, size = 13) {
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">${ICONS[name] || ""}</svg>`;
+  }
+  function fmtInt(value) {
+    return new Intl.NumberFormat("en-US").format(Number(value) || 0);
+  }
+  function fmtDate(value, { time = true } = {}) {
+    if (!value) return "—";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "—";
+    return date.toLocaleString(undefined, {
+      month: "short", day: "numeric",
+      ...(time ? { hour: "2-digit", minute: "2-digit" } : {}),
+    });
+  }
+  function severityMeta(id) { return SEVERITY[id] || SEVERITY.medium; }
+  function assessmentMeta(id) { return ASSESSMENT[id] || ASSESSMENT["not-reviewed"]; }
+  function verdictMeta(id) { return VERDICT[id] || VERDICT["needs-work"]; }
+  function statusMeta(id) { return STATUS[id] || STATUS.unknown; }
+  function riskMeta(id) { return RISK[id] || RISK.low; }
+  function lensMeta(id) { return DATA.lensCatalog?.[id] || { label: id || "General", color: "var(--slate)" }; }
+  function baseName(file) { const index = file.lastIndexOf("/"); return index >= 0 ? file.slice(index + 1) : file; }
+  function dirName(file) { const index = file.lastIndexOf("/"); return index >= 0 ? file.slice(0, index + 1) : ""; }
+  function fmtText(value) {
+    const text = String(value ?? "").trim();
+    if (!text) return "";
+    return text.split(/\n{2,}/).map((paragraph) => `<p>${esc(paragraph).replace(/\n/g, "<br>")}</p>`).join("");
+  }
+  function lineRef(finding) {
+    if (!finding.startLine) return finding.file;
+    const prefix = finding.side === "old" ? "old " : "";
+    const end = finding.endLine && finding.endLine !== finding.startLine ? `–${finding.endLine}` : "";
+    return `${finding.file}:${prefix}${finding.startLine}${end}`;
+  }
+  function shortRef(finding) {
+    if (!finding.startLine) return "File";
+    const prefix = finding.side === "old" ? "old " : "";
+    const end = finding.endLine && finding.endLine !== finding.startLine ? `–${finding.endLine}` : "";
+    return `${prefix}L${finding.startLine}${end}`;
+  }
+  function blockRange(block) {
+    if (block.side === "old") return `old L${block.startLine}–${block.endLine}`;
+    return `L${block.startLine}–${block.endLine}`;
+  }
+  function safeId(value) { return String(value ?? "").replace(/[^A-Za-z0-9_-]+/g, "-"); }
+  function sortedFindings(findings) {
+    return [...(findings || [])].sort((a, b) => {
+      const severity = SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity);
+      if (severity !== 0) return severity;
+      return (a.startLine || 0) - (b.startLine || 0);
+    });
+  }
+  function fileFindings(file) { return sortedFindings(file.findings || []); }
+  function blockFindings(file, block) { return (file.findings || []).filter((finding) => finding.blockId === block.id); }
+  function loadDrafts() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(draftKey) || "[]");
+      return Array.isArray(raw) ? raw : [];
+    } catch {
+      return [];
+    }
+  }
+  function saveDrafts() {
+    try { localStorage.setItem(draftKey, JSON.stringify(state.drafts)); } catch (_) {}
+  }
+  function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+
+  /* -------------------------------------------------------------- server */
+  async function api(path, options = {}) {
+    if (!state.server.token) throw new Error("No review server token.");
+    const response = await fetch(path, {
+      method: options.method || "GET",
+      headers: {
+        "X-Review-Token": state.server.token,
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+      },
+      body: options.body ? JSON.stringify(options.body) : undefined,
+      cache: "no-store",
+    });
+    const text = await response.text();
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+    if (!response.ok) throw new Error(data?.error || `Review server error (${response.status}).`);
+    return data;
+  }
+
+  async function pollState({ quiet = false } = {}) {
+    if (!state.server.token) {
+      updateServerUI();
+      return;
+    }
+    try {
+      const next = await api("api/state");
+      const key = JSON.stringify({ notes: next.notes, replies: next.replies, agent: next.agent, closed: next.closed, current: next.current });
+      const changed = key !== state.server.lastJSON;
+      state.server.connected = true;
+      state.server.error = null;
+      state.server.session = next;
+      state.server.lastJSON = key;
+      if (next.current?.runId && next.current.runId !== DATA.meta.runId && !state.reloadShown) {
+        state.reloadShown = true;
+        document.getElementById("reload-bar").hidden = false;
+      }
+      updateServerUI();
+      updateNotesCount();
+      if (changed && state.notesOpen) renderNotesDrawer({ preserve: true });
+      if (changed && state.route?.view === "file") {
+        const file = FILE_MAP.get(state.route.file);
+        if (file) updateReviewHeader(file);
+      }
+    } catch (error) {
+      state.server.connected = false;
+      state.server.session = null;
+      state.server.error = String(error.message || error);
+      updateServerUI();
+      updateNotesCount();
+      if (!quiet) {
+        if (state.notesOpen) renderNotesDrawer({ preserve: true });
+      }
+    }
+  }
+
+  function startPolling() {
+    if (state.pollTimer) clearInterval(state.pollTimer);
+    state.pollTimer = setInterval(() => pollState({ quiet: true }), 2000);
+  }
+
+  async function sendFeedback() {
+    const notes = [...state.drafts];
+    if (notes.length === 0) {
+      toast("Write a note first.");
+      return;
+    }
+    if (!state.server.connected) {
+      copyFeedback(notes);
+      return;
+    }
+    const send = document.getElementById("notes-send");
+    if (send) send.disabled = true;
+    try {
+      await api("api/feedback", {
+        method: "POST",
+        body: { notes: notes.map((note) => ({ text: note.text, anchor: note.anchor })) },
+      });
+      state.drafts = [];
+      saveDrafts();
+      await pollState({ quiet: true });
+      renderNotesDrawer({ preserve: false });
+      updateNotesCount();
+      toast("Sent to agent.");
+    } catch (error) {
+      toast(`Could not send: ${error.message}`);
+    } finally {
+      if (send) send.disabled = false;
+    }
+  }
+
+  function copyFeedback(notes = state.drafts) {
+    if (!notes.length) {
+      toast("No notes to copy.");
+      return;
+    }
+    const all = [...notes];
+    const text = [
+      `# Review notes · ${DATA.meta.repo.name} · iteration ${DATA.meta.iteration}`,
+      "",
+      ...all.map((note, index) => [
+        `${index + 1}. ${anchorLabel(note.anchor)}`,
+        note.text,
+        "",
+      ].join("\n")),
+    ].join("\n");
+    copyText(text);
+  }
+
+  async function closeReview() {
+    if (!state.server.connected) {
+      toast("The review server is not connected.");
+      return;
+    }
+    if (!confirm("Close the review server?")) return;
+    try {
+      await api("api/close", { method: "POST" });
+      toast("Review server closed.");
+      state.server.session = { ...(state.server.session || {}), closed: true };
+      updateServerUI();
+      renderNotesDrawer({ preserve: true });
+    } catch (error) {
+      toast(`Could not close: ${error.message}`);
+    }
+  }
+
+  function updateServerUI() {
+    const status = agentStatus();
+    const dot = document.querySelector("#agent-status .agent-dot");
+    if (dot) {
+      dot.className = `agent-dot ${status.className}`;
+    }
+    const label = document.getElementById("agent-label");
+    if (label) label.textContent = status.label;
+    const sideLabel = document.getElementById("side-agent-label");
+    if (sideLabel) sideLabel.textContent = status.label;
+    const sideDot = document.getElementById("side-agent-dot");
+    if (sideDot) sideDot.className = `agent-dot ${status.className}`;
+    const statusServer = document.getElementById("status-server");
+    if (statusServer) statusServer.textContent = status.label;
+  }
+
+  function agentStatus() {
+    if (!state.server.token) return { label: "Preview", className: "is-offline" };
+    if (!state.server.connected) return { label: "Server off", className: "is-offline" };
+    if (state.server.session?.closed) return { label: "Session closed", className: "is-offline" };
+    if (state.server.session?.agent?.waiting) return { label: "Agent waiting", className: "is-waiting" };
+    return { label: "Agent idle", className: "is-idle" };
+  }
+
+  function updateNotesCount() {
+    const sentOpen = (state.server.session?.notes || []).filter((note) => ["sent", "seen"].includes(note.status)).length;
+    const count = state.drafts.length + sentOpen;
+    const el = document.getElementById("notes-count");
+    if (el) el.textContent = String(count);
+    renderStatusbar();
+  }
+
+  /* -------------------------------------------------------------- chrome */
+  function renderChrome() {
+    document.getElementById("brand-repo").textContent = DATA.meta.repo?.name || "repository";
+    const verdict = verdictMeta(DATA.summary.verdict);
+    const status = agentStatus();
+    document.getElementById("topbar-center").innerHTML = [
+      `<span class="chip" style="color:${verdict.color};border-color:color-mix(in srgb, ${verdict.color} 32%, var(--line));background:color-mix(in srgb, ${verdict.color} 7%, var(--panel))">${icon(verdict.icon, 10)}<strong>${esc(verdict.label)}</strong></span>`,
+      `<span class="chip">iteration <strong>${DATA.meta.iteration}</strong></span>`,
+      `<span class="chip">${fmtInt(DATA.stats.files)} files</span>`,
+      `<span class="chip">${fmtInt(DATA.stats.findings)} findings</span>`,
+      `<span class="chip" id="agent-status"><span class="agent-dot ${status.className}"></span><span id="agent-label">${esc(status.label)}</span></span>`,
+    ].join("");
+    updateThemeButton();
+    renderStatusbar();
+  }
+
+  function renderStatusbar() {
+    const route = state.route;
+    const current = route?.view === "file" ? route.file : "Overview";
+    const status = agentStatus();
+    const notes = state.drafts.length + (state.server.session?.notes || []).filter((note) => ["sent", "seen"].includes(note.status)).length;
+    document.getElementById("statusbar").innerHTML = [
+      `<span class="st">${esc(DATA.meta.repo?.branch || "HEAD")}${DATA.meta.repo?.headShort ? ` · ${esc(DATA.meta.repo.headShort)}` : ""}</span>`,
+      `<span class="st">${esc(DATA.meta.scope?.label || "working tree")}</span>`,
+      `<span class="st">${esc(current)}</span>`,
+      `<span class="spacer"></span>`,
+      `<span class="st st-accent">${fmtInt(DATA.stats.coveragePct)}% reviewed</span>`,
+      `<span class="st">${fmtInt(DATA.stats.findings)} findings</span>`,
+      `<span class="st">${fmtInt(notes)} notes</span>`,
+      `<span class="st" id="status-server">${esc(status.label)}</span>`,
+    ].join("");
+  }
+
+  function renderSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const route = state.route;
+    const files = DATA.files || [];
+    const rows = files.map((file) => {
+      const status = statusMeta(file.status);
+      const findings = fileFindings(file).filter((finding) => finding.severity !== "praise");
+      const active = route?.view === "file" && route.file === file.path;
+      return `<button class="file-row${active ? " is-active" : ""}${findings.length ? " has-findings" : ""}" data-file="${esc(file.path)}" title="${esc(file.path)}">
+        <span class="file-status" style="background:${status.color}"></span>
+        <span class="file-name"><span class="base">${esc(baseName(file.path))}</span><span class="dir">${esc(dirName(file.path) || ".")}</span></span>
+        <span class="file-delta">${file.binary ? "bin" : `<span class="add">+${fmtInt(file.additions)}</span> <span class="del">−${fmtInt(file.deletions)}</span>`}</span>
+        <span class="file-count" title="${findings.length} findings">${findings.length || ""}</span>
+      </button>`;
+    }).join("");
+    const status = agentStatus();
+    sidebar.innerHTML = `
+      <div class="side-head"><span>Changed files</span><span>${fmtInt(files.length)}</span></div>
+      <button class="side-overview${route?.view === "overview" ? " is-active" : ""}" data-overview>${icon("overview", 12)} Overview</button>
+      <div class="side-files">${rows}</div>
+      <div class="side-foot">
+        <div class="row"><span>scope</span><strong title="${esc(DATA.meta.scope?.label || "")}">${esc(DATA.meta.scope?.label || "working tree")}</strong></div>
+        <div class="row"><span>iteration</span><strong>${DATA.meta.iteration} · ${esc(DATA.summary.verdict)}</strong></div>
+        <div class="row agent-line"><span class="agent-dot ${status.className}" id="side-agent-dot"></span><span id="side-agent-label">${esc(status.label)}</span></div>
+      </div>`;
+    sidebar.querySelector("[data-overview]")?.addEventListener("click", () => navigate("overview"));
+    sidebar.querySelectorAll("[data-file]").forEach((button) => {
+      button.addEventListener("click", () => navigate("file", button.dataset.file));
+    });
+  }
+
+  function updateThemeButton() {
+    const button = document.getElementById("theme-btn");
+    if (button) button.innerHTML = icon(state.theme === "dark" ? "moon" : "sun", 14);
+  }
+
+  function toggleTheme() {
+    state.theme = state.theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = state.theme;
+    try { localStorage.setItem("code-review-theme", state.theme); } catch (_) {}
+    updateThemeButton();
+    if (state.code?.instance?.setThemeType) {
+      try { state.code.instance.setThemeType(state.theme); } catch (_) {
+        if (state.route?.view === "file") {
+          const file = FILE_MAP.get(state.route.file);
+          if (file) mountCode(file, state.code.mode || "diff");
+        }
+      }
+    }
+  }
+
+  /* --------------------------------------------------------------- route */
+  function parseRoute() {
+    const raw = location.hash.replace(/^#/, "");
+    if (!raw || raw === "overview") return { view: "overview" };
+    try {
+      const params = new URLSearchParams(raw);
+      if (params.has("file")) return { view: "file", file: params.get("file"), finding: params.get("finding") || null };
+    } catch (_) {}
+    return { view: "overview" };
+  }
+
+  function navigate(view, file, finding) {
+    const next = view === "file" ? { view, file, finding: finding || null } : { view: "overview" };
+    const hash = view === "file"
+      ? `#file=${encodeURIComponent(file)}${finding ? `&finding=${encodeURIComponent(finding)}` : ""}`
+      : "#overview";
+    if (location.hash === hash) renderRoute();
+    else location.hash = hash;
+  }
+
+  function renderRoute() {
+    let route = parseRoute();
+    if (route.view === "file" && !FILE_MAP.has(route.file)) {
+      route = { view: "overview" };
+      history.replaceState(null, "", "#overview");
+    }
+    state.route = route;
+    renderChrome();
+    renderSidebar();
+    const view = document.getElementById("view");
+    if (route.view === "overview") {
+      state.code = null;
+      view.innerHTML = renderOverview();
+      bindOverview();
+      animateCounts();
+    } else {
+      const file = FILE_MAP.get(route.file);
+      view.innerHTML = renderFile(file);
+      bindFile(file);
+      mountCode(file, "diff").then(() => {
+        if (route.finding) scrollToFinding(route.finding, true);
+      });
+    }
+    document.title = `Review · ${DATA.meta.repo?.name || ""} · ${route.view === "file" ? baseName(route.file) : "overview"}`;
+    renderStatusbar();
+  }
+
+  /* ------------------------------------------------------------ overview */
+  function renderOverview() {
+    const verdict = verdictMeta(DATA.summary.verdict);
+    return `<div class="overview"><div class="overview-inner">
+      <header class="overview-head">
+        <div class="verdict-badge" style="--verdict-color:${verdict.color}">
+          ${icon(verdict.icon, 20)}
+          <div><div class="v-label">Verdict</div><div class="v-state">${esc(verdict.label)}</div></div>
+        </div>
+        <div class="overview-title">
+          <h1>${esc(DATA.summary.headline)}</h1>
+          <div class="overview-summary">${fmtText(DATA.summary.overview)}</div>
+          <div class="overview-meta">
+            <span class="chip">iteration <strong>${DATA.meta.iteration}</strong></span>
+            <span class="chip">${esc(DATA.meta.scope?.label || "working tree")}</span>
+            <span class="chip">${fmtInt(DATA.stats.files)} files</span>
+            <span class="chip">${fmtInt(DATA.stats.findings)} findings</span>
+            <span class="chip ${DATA.stats.coveragePct === 100 ? "green" : "orange"}">${fmtInt(DATA.stats.coveragePct)}% reviewed</span>
+          </div>
+        </div>
+      </header>
+      ${renderMetrics()}
+      ${renderFlowCard()}
+      ${renderIterationCard()}
+      <div class="overview-lower">
+        ${renderTopFindings()}
+        <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+          ${renderActions()}
+          ${renderRisks()}
+        </div>
+      </div>
+    </div></div>`;
+  }
+
+  function renderMetrics() {
+    const s = DATA.stats;
+    const sev = s.severityCounts || {};
+    return `<div class="metrics">
+      <div class="metric"><div class="metric-label">Files</div><div class="metric-value">${fmtInt(s.files)}</div><div class="metric-sub">${fmtInt(s.binaryFiles)} binary</div></div>
+      <div class="metric"><div class="metric-label">Lines</div><div class="metric-value">${fmtInt((s.additions || 0) + (s.deletions || 0))}</div><div class="metric-sub"><span class="add">+${fmtInt(s.additions)}</span> <span class="del">−${fmtInt(s.deletions)}</span></div></div>
+      <div class="metric"><div class="metric-label">Blocks</div><div class="metric-value">${fmtInt(s.totalBlocks)}</div><div class="metric-sub">${fmtInt(s.reviewedBlocks)} reviewed</div></div>
+      <div class="metric"><div class="metric-label">Findings</div><div class="metric-value">${fmtInt(s.findings)}</div><div class="metric-sub">${(sev.blocker || 0) + (sev.high || 0)} high signal</div></div>
+      <div class="metric"><div class="metric-label">Coverage</div><div class="metric-value">${fmtInt(s.coveragePct)}%</div><div class="metric-sub">${fmtInt(s.reviewedBlocks)} / ${fmtInt(s.totalBlocks)} blocks</div></div>
+    </div>`;
+  }
+
+  function renderSignalCard() {
+    const s = DATA.stats;
+    const total = SEVERITY_ORDER.reduce((sum, id) => sum + (s.severityCounts?.[id] || 0), 0);
+    const bar = SEVERITY_ORDER.map((id) => {
+      const count = s.severityCounts?.[id] || 0;
+      return count ? `<span class="s-${id}" style="flex:${count} 0 0" title="${esc(severityMeta(id).label)}: ${count}"></span>` : "";
+    }).join("");
+    const circumference = 2 * Math.PI * 26;
+    const offset = circumference * (1 - (s.coveragePct || 0) / 100);
+    const lenses = Object.entries(s.lensCounts || {}).sort((a, b) => b[1] - a[1]).slice(0, 4);
+    return `<aside class="card signal-card">
+      <div class="signal-top">
+        <svg class="signal-ring" viewBox="0 0 62 62" role="img" aria-label="${fmtInt(s.coveragePct)} percent reviewed">
+          <circle class="track" cx="31" cy="31" r="26"></circle>
+          <circle class="value" cx="31" cy="31" r="26" stroke-dasharray="${circumference.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}" transform="rotate(-90 31 31)"></circle>
+          <text x="31" y="35" text-anchor="middle">${fmtInt(s.coveragePct)}%</text>
+        </svg>
+        <div><div class="signal-title">Review coverage</div><div class="signal-sub">${fmtInt(s.reviewedBlocks)} of ${fmtInt(s.totalBlocks)} blocks</div><div class="signal-sub">${fmtInt(s.files)} files</div></div>
+      </div>
+      <div class="signal-sep"></div>
+      <div class="signal-row"><span>Findings</span><strong>${fmtInt(total)}</strong></div>
+      <div class="sev-bar">${bar || `<span style="flex:1;background:var(--line-2)"></span>`}</div>
+      <div class="sev-legend">${SEVERITY_ORDER.map((id) => `<span style="color:${severityMeta(id).color}"><i></i>${esc(severityMeta(id).label)} ${s.severityCounts?.[id] || 0}</span>`).join("")}</div>
+      <div class="signal-sep"></div>
+      <div class="signal-row"><span>Lenses used</span><strong>${Object.keys(s.lensCounts || {}).length}</strong></div>
+      <div class="lens-chips">${lenses.map(([id, count]) => `<span class="pill" style="color:${lensMeta(id).color};border-color:color-mix(in srgb, ${lensMeta(id).color} 30%, var(--line))">${esc(lensMeta(id).label)} ${count}</span>`).join("") || `<span class="faint" style="font-size:10px">No lens findings.</span>`}</div>
+    </aside>`;
+  }
+
+  function renderFlowCard() {
+    const flow = DATA.flow || {};
+    return `<article class="card flow-card">
+      <div class="card-head">
+        <div><h2>${esc(flow.title || "Change flow")}</h2><p>${esc(flow.subtitle || "How this change moves from input to outcome.")}</p></div>
+        <span class="pill ${flow.source === "agent" ? "accent" : "slate"}">${flow.source === "agent" ? "authored" : "fallback"}</span>
+      </div>
+      <div class="flow-wrap">${renderFlowSvg(flow)}</div>
+      <div class="flow-legend">${[...new Set((flow.nodes || []).map((node) => node.kind))].map((kind) => `<span class="l-${esc(kind)}"><i></i>${esc(FLOW_KIND[kind] || kind)}</span>`).join("")}</div>
+    </article>`;
+  }
+
+  function renderFlowSvg(flow) {
+    const nodes = flow.nodes || [];
+    if (!nodes.length) return `<div class="review-empty">No flow.</div>`;
+    const nodeW = 158;
+    const nodeH = 52;
+    const gapX = 56;
+    const gapY = 18;
+    const pad = 18;
+    const byId = new Map(nodes.map((node) => [node.id, node]));
+    const edges = (flow.edges || []).filter((edge) => byId.has(edge.from) && byId.has(edge.to) && edge.from !== edge.to);
+    const layers = new Map();
+    for (const node of nodes) if (Number.isInteger(node.layer)) layers.set(node.id, node.layer);
+    if (layers.size < nodes.length) {
+      const indegree = new Map(nodes.map((node) => [node.id, 0]));
+      const adj = new Map(nodes.map((node) => [node.id, []]));
+      for (const edge of edges) {
+        adj.get(edge.from)?.push(edge.to);
+        indegree.set(edge.to, (indegree.get(edge.to) || 0) + 1);
+      }
+      const queue = nodes.filter((node) => (indegree.get(node.id) || 0) === 0).map((node) => node.id);
+      const order = [];
+      while (queue.length) {
+        const id = queue.shift();
+        order.push(id);
+        for (const target of adj.get(id) || []) {
+          indegree.set(target, indegree.get(target) - 1);
+          if (indegree.get(target) === 0) queue.push(target);
+        }
+      }
+      const computed = new Map(nodes.map((node) => [node.id, Number.isInteger(node.layer) ? node.layer : 0]));
+      for (const id of order) {
+        for (const target of adj.get(id) || []) {
+          computed.set(target, Math.max(computed.get(target) || 0, (computed.get(id) || 0) + 1));
+        }
+      }
+      for (const node of nodes) layers.set(node.id, computed.get(node.id) || 0);
+    }
+    const maxLayer = Math.max(...layers.values(), 0);
+    const grouped = new Map();
+    for (const node of nodes) {
+      const layer = layers.get(node.id) || 0;
+      if (!grouped.has(layer)) grouped.set(layer, []);
+      grouped.get(layer).push(node);
+    }
+    const heights = new Map();
+    for (const [layer, group] of grouped) heights.set(layer, group.length * nodeH + Math.max(0, group.length - 1) * gapY);
+    const maxHeight = Math.max(...heights.values(), nodeH);
+    const positions = new Map();
+    for (const [layer, group] of grouped) {
+      const startY = pad + (maxHeight - (heights.get(layer) || nodeH)) / 2;
+      group.forEach((node, index) => positions.set(node.id, {
+        x: pad + layer * (nodeW + gapX),
+        y: startY + index * (nodeH + gapY),
+      }));
+    }
+    const width = pad * 2 + (maxLayer + 1) * nodeW + maxLayer * gapX;
+    const height = pad * 2 + maxHeight;
+    const edgeMarkup = edges.map((edge) => {
+      const from = positions.get(edge.from);
+      const to = positions.get(edge.to);
+      if (!from || !to) return "";
+      const x1 = from.x + nodeW;
+      const y1 = from.y + nodeH / 2;
+      const x2 = to.x;
+      const y2 = to.y + nodeH / 2;
+      const bend = Math.max(28, (x2 - x1) * 0.42);
+      const path = x2 > x1 + 10
+        ? `M ${x1} ${y1} C ${x1 + bend} ${y1}, ${x2 - bend} ${y2}, ${x2} ${y2}`
+        : `M ${x1} ${y1} C ${x1 + 36} ${y1 - 28}, ${x2 - 36} ${y2 - 28}, ${x2} ${y2}`;
+      return `<path class="flow-edge kind-${esc(edge.kind || "data")}" d="${path}" marker-end="url(#arrow-${esc(edge.kind || "data")})"></path>${edge.label ? `<text class="edge-label" x="${(x1 + x2) / 2}" y="${(y1 + y2) / 2 - 5}" text-anchor="middle">${esc(edge.label)}</text>` : ""}`;
+    }).join("");
+    const nodeMarkup = nodes.map((node) => {
+      const pos = positions.get(node.id);
+      if (!pos) return "";
+      const lines = wrapText(node.label || node.id, 21, 2);
+      const label = lines.map((line, index) => `<tspan x="14" dy="${index === 0 ? 0 : 11}">${esc(line)}</tspan>`).join("");
+      return `<g class="flow-node kind-${esc(node.kind || "transform")}" transform="translate(${pos.x} ${pos.y})" data-node-id="${esc(node.id)}">
+        <title>${esc(node.label || node.id)}${node.detail ? `\n${esc(node.detail)}` : ""}</title>
+        <rect width="${nodeW}" height="${nodeH}" rx="7"></rect>
+        <circle class="node-dot" cx="14" cy="14" r="2.8"></circle>
+        <text class="node-kind" x="22" y="17">${esc(FLOW_KIND[node.kind] || node.kind || "PROCESS")}</text>
+        <text class="node-sub" x="14" y="30">${esc((node.files || []).length ? `${(node.files || []).length} file${(node.files || []).length === 1 ? "" : "s"}` : "system")}</text>
+        <text class="node-label" x="14" y="42">${label}</text>
+      </g>`;
+    }).join("");
+    return `<svg class="flow-svg" viewBox="0 0 ${width} ${height}" style="min-width:${Math.max(680, width)}px" role="img" aria-label="${esc(flow.title || "Change flow")}">
+      <defs>${["data", "control", "event", "dependency"].map((kind) => `<marker id="arrow-${kind}" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 8 4 0 8Z" fill="var(--line-2)"></path></marker>`).join("")}</defs>
+      ${edgeMarkup}${nodeMarkup}
+    </svg>`;
+  }
+
+  function wrapText(text, maxChars, maxLines) {
+    const source = String(text || "");
+    const words = source.split(/\s+/).filter(Boolean);
+    const lines = [];
+    let current = "";
+    let used = 0;
+    for (const word of words) {
+      const candidate = current ? `${current} ${word}` : word;
+      if (candidate.length <= maxChars || !current) {
+        current = candidate;
+        used += 1;
+      } else {
+        lines.push(current);
+        current = word;
+        used += 1;
+        if (lines.length === maxLines) break;
+      }
+    }
+    if (current && lines.length < maxLines) lines.push(current);
+    if (!lines.length) lines.push(source);
+    if (lines.length > maxLines) lines.length = maxLines;
+    if (used < words.length) {
+      const last = lines[lines.length - 1] || "";
+      lines[lines.length - 1] = last.length >= maxChars ? `${last.slice(0, maxChars - 1)}…` : `${last}…`;
+    }
+    return lines;
+  }
+
+  function renderIterationCard() {
+    const it = DATA.iteration || {};
+    const delta = it.delta || {};
+    const previous = it.previous;
+    const chips = previous ? [
+      `<span class="delta-chip new"><b>${fmtInt(delta.counts?.new || 0)}</b> new</span>`,
+      `<span class="delta-chip resolved"><b>${fmtInt(delta.counts?.resolved || 0)}</b> resolved</span>`,
+      `<span class="delta-chip"><b>${fmtInt(delta.counts?.carried || 0)}</b> carried</span>`,
+      delta.counts?.unverified ? `<span class="delta-chip unverified"><b>${fmtInt(delta.counts.unverified)}</b> unverified</span>` : "",
+    ].filter(Boolean).join("") : "";
+    const code = previous && delta.code ? delta.code : null;
+    const deltaFiles = code ? [...(code.files || [])].sort((a, b) => {
+      const rank = { changed: 0, added: 1, removed: 2, unknown: 3, unchanged: 4 };
+      return (rank[a.status] ?? 5) - (rank[b.status] ?? 5) || a.path.localeCompare(b.path);
+    }).slice(0, 8) : [];
+    return `<article class="card iteration-card">
+      <div class="iteration-head">
+        <div><h2>${previous ? `Iteration ${DATA.meta.iteration}` : "Baseline"}</h2><p>${previous ? `Compared with iteration ${previous.iteration}` : "First review of this change."}</p></div>
+        <div style="margin-left:auto"><span class="pill ${DATA.stats.coveragePct === 100 ? "green" : "orange"}">${fmtInt(DATA.stats.coveragePct)}% reviewed</span></div>
+      </div>
+      ${previous ? `<div class="delta-chips">${chips}</div><div class="iteration-note">${fmtText(delta.note || "")}</div>` : `<div class="iteration-note">The next iteration shows new, resolved, and carried findings.</div>`}
+      ${code ? `<div class="code-delta"><span><strong>${fmtInt(code.totals?.filesChanged || 0)}</strong> files changed since #${previous.iteration}</span><span class="add">+${fmtInt(code.totals?.additions || 0)}</span><span class="del">−${fmtInt(code.totals?.deletions || 0)}</span>${code.scopeChanged ? `<span class="pill orange">scope changed</span>` : ""}</div><div class="delta-files">${deltaFiles.map((file) => `<span class="delta-file" title="${esc(file.path)}">${esc(baseName(file.path))}${file.status === "changed" || file.status === "added" ? ` <span class="add">+${file.additions || 0}</span>` : file.status === "removed" ? ` <span class="del">removed</span>` : ""}</span>`).join("")}</div>` : ""}
+      ${renderSparkline(it.sparkline || [])}
+      ${renderTimeline(it.timeline || [])}
+    </article>`;
+  }
+
+  function renderSparkline(points) {
+    if (!points.length) return "";
+    const width = 900;
+    const height = 54;
+    const padX = 12;
+    const padY = 8;
+    const max = Math.max(...points.map((point) => point.open || 0), 1);
+    const flat = points.every((point) => (point.open || 0) === (points[0].open || 0));
+    const step = points.length > 1 ? (width - padX * 2) / (points.length - 1) : 0;
+    const coords = points.map((point, index) => ({
+      x: padX + index * step,
+      y: flat ? height / 2 : height - padY - ((point.open || 0) / max) * (height - padY * 2),
+      point,
+    }));
+    const line = coords.map((coord) => `${coord.x.toFixed(1)},${coord.y.toFixed(1)}`).join(" ");
+    return `<div class="sparkline">
+      <div class="sparkline-head"><span>Open findings</span><span>${fmtInt(points[points.length - 1]?.open || 0)} now</span></div>
+      <svg viewBox="0 0 ${width} ${height}" aria-label="Open findings by iteration">
+        <line class="grid" x1="${padX}" y1="${height - padY}" x2="${width - padX}" y2="${height - padY}"></line>
+        ${points.length > 1 ? `<polyline class="line" points="${line}"></polyline>` : ""}
+        ${coords.map((coord) => `<circle class="dot${coord.point.iteration === DATA.meta.iteration ? " current" : ""}" cx="${coord.x}" cy="${coord.y}" r="${coord.point.iteration === DATA.meta.iteration ? 3 : 2.2}"></circle><text class="label" x="${coord.x}" y="${height - 1}" text-anchor="middle">#${coord.point.iteration}</text>`).join("")}
+      </svg>
+    </div>`;
+  }
+
+  function renderTimeline(entries) {
+    if (!entries.length) return "";
+    return `<div class="timeline">${entries.map((entry) => {
+      const verdict = verdictMeta(entry.verdict);
+      const current = Boolean(entry.current) || entry.iteration === DATA.meta.iteration;
+      const link = Boolean(entry.artifact) && !current;
+      const content = `<span class="tl-iter">ITERATION ${String(entry.iteration).padStart(2, "0")}</span><span class="tl-verdict" style="--tl-color:${verdict.color}"><i></i>${esc(verdict.label)}</span><span class="tl-counts">${fmtInt(entry.findings?.open || 0)} open · ${fmtInt(entry.findings?.resolved || 0)} resolved</span>`;
+      if (link) return `<button class="timeline-item is-link" data-open-artifact="${esc(entry.id)}" title="Open archived iteration">${content}</button>`;
+      return `<div class="timeline-item${current ? " is-current" : ""}">${content}</div>`;
+    }).join("")}</div>`;
+  }
+
+  function renderTopFindings() {
+    const findings = sortedFindings(DATA.findings).filter((finding) => finding.severity !== "praise").slice(0, 7);
+    return `<article class="card section-card">
+      <div class="card-head"><div><h2>Needs attention</h2><p>Top open findings.</p></div><div class="card-tools"><span class="pill">${fmtInt(DATA.stats.findings)} open</span></div></div>
+      ${findings.length ? `<div class="top-findings">${findings.map((finding) => {
+        const meta = severityMeta(finding.severity);
+        const file = FILE_MAP.get(finding.file);
+        return `<div class="top-finding" data-finding-id="${esc(finding.id)}" data-file="${esc(finding.file)}" data-top-finding>
+          <div class="tf-sev"><span class="pill" style="color:${meta.color};border-color:color-mix(in srgb, ${meta.color} 30%, var(--line))">${esc(meta.label)}</span></div>
+          <div><div class="tf-title">${esc(finding.title)}</div><div class="tf-meta">${esc(finding.file)}:${esc(finding.startLine || "file")} · ${esc(lensMeta(finding.lens).label)}</div></div>
+          <button class="btn sm" data-open-finding="${esc(finding.id)}" data-file="${esc(finding.file)}">Open</button>
+        </div>`;
+      }).join("")}</div>` : `<div class="empty-line">No findings.</div>`}
+    </article>`;
+  }
+
+  function renderActions() {
+    const actions = DATA.summary.nextActions || [];
+    return `<article class="card section-card">
+      <div class="card-head"><div><h2>Next steps</h2><p>Ordered actions.</p></div></div>
+      ${actions.length ? `<div class="actions-list">${actions.map((action) => {
+        const file = action.file ? FILE_MAP.get(action.file) : null;
+        const finding = action.findingId ? FINDING_MAP.get(action.findingId) : null;
+        return `<div class="action-row"><span class="action-num">${fmtInt(action.priority)}</span><div><div class="action-text">${fmtText(action.action)}</div><div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap">${file ? `<button class="pill slate" data-open-file="${esc(file.path)}">${esc(baseName(file.path))}</button>` : ""}${finding ? `<span class="pill">${esc(finding.id)}</span>` : ""}</div></div><button class="btn sm" data-open-file="${esc(file?.path || "")}" ${file ? "" : "disabled"}>Open</button></div>`;
+      }).join("")}</div>` : `<div class="empty-line">No next steps.</div>`}
+    </article>`;
+  }
+
+  function renderRisks() {
+    const risks = DATA.summary.risks || [];
+    return `<article class="card section-card">
+      <div class="card-head"><div><h2>Risks</h2><p>Cross-cutting risks.</p></div></div>
+      ${risks.length ? risks.map((risk) => {
+        const meta = severityMeta(risk.severity);
+        return `<div class="risk-row"><div class="risk-title" style="--risk-color:${meta.color}"><i></i>${esc(risk.title)}</div><div class="risk-text">${fmtText(risk.detail)}</div></div>`;
+      }).join("") : `<div class="empty-line">No risks listed.</div>`}
+    </article>`;
+  }
+
+  /* ---------------------------------------------------------------- file */
+  function renderFile(file) {
+    const status = statusMeta(file.status);
+    const risk = riskMeta(file.fileReview?.risk);
+    const content = file.content;
+    const lineCount = file.status === "deleted" ? (file.lineCount?.old || 0) : (file.lineCount?.new || 0);
+    return `<div class="file-view">
+      <div class="file-head">
+        <div class="file-title" title="${esc(file.path)}"><span class="dir">${esc(dirName(file.path))}</span><span class="base">${esc(baseName(file.path))}</span></div>
+        <div class="file-head-meta">
+          <span>${esc(file.language)}</span><span class="sep">·</span>
+          ${file.binary ? `<span>binary</span>` : `<span class="add">+${fmtInt(file.additions)}</span><span class="del">−${fmtInt(file.deletions)}</span>`}
+          <span class="sep">·</span><span>${fmtInt(file.reviewedBlocks)}/${fmtInt(file.totalBlocks)} blocks</span>
+          ${file.oldPath ? `<span class="sep">·</span><span>from ${esc(file.oldPath)}</span>` : ""}
+        </div>
+        <div class="file-badges">
+          <span class="pill" style="color:${status.color};border-color:color-mix(in srgb, ${status.color} 30%, var(--line))">${esc(status.label)}</span>
+          <span class="pill" style="color:${risk.color};border-color:color-mix(in srgb, ${risk.color} 30%, var(--line))">${esc(risk.label)}</span>
+          ${(file.lenses || []).slice(0, 4).map((id) => `<span class="pill" style="color:${lensMeta(id).color};border-color:color-mix(in srgb, ${lensMeta(id).color} 28%, var(--line))">${esc(lensMeta(id).label)}</span>`).join("")}
+          <button class="btn sm" data-copy-path="${esc(file.path)}">${icon("copy", 11)} Copy path</button>
+        </div>
+      </div>
+      <div class="file-panes">
+        <section class="code-panel" aria-label="Code">
+          <div class="pane-head">
+            <div class="pane-title">${icon("code", 12)} Code</div>
+            <div class="pane-meta"><span id="code-mode-label">${file.binary ? "binary" : file.status === "deleted" ? "deleted file" : file.status === "added" ? "new file" : "unified diff"}</span><span class="sep">·</span><span>${fmtInt(lineCount)} lines</span></div>
+            <div class="pane-actions">${content ? `<div class="segmented"><button data-code-mode="diff" class="is-active">Diff</button><button data-code-mode="file">${file.status === "deleted" ? "Old" : "File"}</button></div>` : ""}</div>
+          </div>
+          <div class="code-scroll" id="code-scroll"><div class="code-mount" id="code-mount"></div></div>
+        </section>
+        <section class="review-panel" aria-label="Agent review">
+          <div class="pane-head">
+            <div class="pane-title">${icon("review", 12)} Review</div>
+            <div class="pane-meta" id="review-meta"><span>${fmtInt((file.findings || []).filter((finding) => finding.severity !== "praise").length)} findings</span><span class="sep">·</span><span>${fmtInt(file.totalBlocks)} blocks</span><span class="sep">·</span><span>${fmtInt(file.coveragePct)}%</span></div>
+            <div class="pane-actions"><span class="pill ${risk.color === "var(--red)" ? "red" : risk.color === "var(--orange)" ? "orange" : "green"}">${esc(risk.label)}</span></div>
+          </div>
+          <div class="review-scroll" id="review-scroll">${renderReview(file)}</div>
+        </section>
+      </div>
+    </div>`;
+  }
+
+  function renderReview(file) {
+    const findings = fileFindings(file);
+    const bad = findings.filter((finding) => finding.severity !== "praise");
+    const praise = findings.filter((finding) => finding.severity === "praise");
+    const blocks = file.blocks || [];
+    return `
+      <div class="agent-summary"><div class="eyebrow">Agent note</div>${fmtText(file.fileReview?.summary || "No file summary.")}</div>
+      ${blocks.length ? `<section class="review-section">
+        <div class="review-section-head"><h3>Reviewed blocks</h3><span class="count">${fmtInt(blocks.length)}</span><span class="line"></span></div>
+        ${blocks.map((block) => blockRow(file, block)).join("")}
+      </section>` : ""}
+      <section class="review-section">
+        <div class="review-section-head"><h3>Needs attention</h3><span class="count">${fmtInt(bad.length)}</span><span class="line"></span></div>
+        ${bad.length ? bad.map((finding) => findingRow(finding)).join("") : `<div class="review-empty"><strong>No findings.</strong>All reviewed blocks look okay.</div>`}
+      </section>
+      ${praise.length ? `<section class="review-section">
+        <div class="review-section-head"><h3>Praise</h3><span class="count">${fmtInt(praise.length)}</span><span class="line"></span></div>
+        ${praise.map((finding) => findingRow(finding)).join("")}
+      </section>` : ""}`;
+  }
+
+  function findingRow(finding) {
+    const severity = severityMeta(finding.severity);
+    const status = DELTA_STATUS[finding.id]?.status;
+    const revision = status === "new" ? `<span class="pill accent">new</span>` : status === "changed" ? `<span class="pill orange">changed</span>` : "";
+    const evidence = (finding.evidence || []).map((item) => `<span>${esc(item.path)}${item.line ? `:${item.line}` : ""}${item.note ? ` — ${esc(item.note)}` : ""}</span>`).join("");
+    return `<div class="finding-row sev-${esc(finding.severity)}" id="finding-${safeId(finding.id)}" data-finding-id="${esc(finding.id)}" data-start-line="${finding.startLine || ""}" data-end-line="${finding.endLine || finding.startLine || ""}" data-side="${esc(finding.side || "new")}">
+      <div class="finding-head">
+        <span class="finding-sev">${esc(severity.label)}</span>
+        <span class="finding-title">${esc(finding.title)}</span>
+        ${revision}
+        <span class="finding-ref">${esc(shortRef(finding))}</span>
+      </div>
+      <div class="finding-detail">${fmtText(finding.detail)}</div>
+      ${finding.suggestion ? `<div class="finding-fix"><b>Fix:</b> ${fmtText(finding.suggestion)}</div>` : ""}
+      ${evidence ? `<div class="finding-evidence">${evidence}</div>` : ""}
+      <div class="finding-foot">
+        <span>${esc(lensMeta(finding.lens).label)}</span><span>·</span><span>${esc(finding.confidence || "high")} confidence</span><span>·</span><span>${esc(finding.file)}</span>
+        <button class="btn sm" data-locate-finding="${esc(finding.id)}">${icon("locate", 10)} Locate</button>
+        <button class="btn sm" data-note-finding="${esc(finding.id)}" data-note-file="${esc(finding.file)}">${icon("note", 10)} Note</button>
+      </div>
+    </div>`;
+  }
+
+  function blockRow(file, block, { compact = false } = {}) {
+    const meta = assessmentMeta(block.assessment);
+    const count = blockFindings(file, block).filter((finding) => finding.severity !== "praise").length;
+    return `<div class="block-row${state.activeBlock === block.id ? " is-active" : ""}" data-block-id="${esc(block.id)}" data-start-line="${block.startLine}" data-end-line="${block.endLine}" data-side="${esc(block.side || "new")}" title="${esc(block.assessmentSummary || "")}">
+      <span class="block-id">${esc(block.id)}</span>
+      <span class="block-range">${esc(blockRange(block))}</span>
+      <span class="block-assess ${esc(block.assessment)}">${esc(meta.label)}</span>
+      <span class="block-summary">${esc(block.assessmentSummary || (compact ? "No issue." : "No summary."))}</span>
+      <span class="block-count">${count ? `${count} finding${count === 1 ? "" : "s"}` : ""}</span>
+    </div>`;
+  }
+
+  function bindFile(file) {
+    document.querySelectorAll("[data-code-mode]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll("[data-code-mode]").forEach((item) => item.classList.toggle("is-active", item === button));
+        const label = document.getElementById("code-mode-label");
+        if (label) label.textContent = button.dataset.codeMode === "file" ? (file.status === "deleted" ? "old file" : "new file") : (file.status === "deleted" ? "deleted file" : file.status === "added" ? "new file" : "unified diff");
+        mountCode(file, button.dataset.codeMode);
+      });
+    });
+    bindReview(file);
+  }
+
+  function bindReview(file) {
+    const review = document.getElementById("review-scroll");
+    if (!review) return;
+    review.addEventListener("click", (event) => {
+      const locate = event.target.closest("[data-locate-finding]");
+      if (locate) {
+        event.preventDefault();
+        scrollToFinding(locate.dataset.locateFinding, true);
+        return;
+      }
+      const note = event.target.closest("[data-note-finding]");
+      if (note) {
+        event.preventDefault();
+        const finding = FINDING_MAP.get(note.dataset.noteFinding);
+        if (finding) openAnnotate(anchorForFinding(finding));
+        return;
+      }
+      const row = event.target.closest(".block-row");
+      if (row && !state.annotate) {
+        const block = (file.blocks || []).find((entry) => entry.id === row.dataset.blockId);
+        if (block) {
+          setActiveBlock(block.id);
+          scrollToLine(block.startLine, block.side || "new");
+          highlightBlock(block, true);
+        }
+        return;
+      }
+      const findingEl = event.target.closest(".finding-row");
+      if (findingEl && !state.annotate) {
+        const finding = FINDING_MAP.get(findingEl.dataset.findingId);
+        if (finding) scrollToFinding(finding.id);
+      }
+    });
+    review.addEventListener("mouseover", (event) => {
+      const findingEl = event.target.closest(".finding-row");
+      if (findingEl) {
+        const finding = FINDING_MAP.get(findingEl.dataset.findingId);
+        if (finding) {
+          highlightFinding(finding);
+          return;
+        }
+      }
+      const row = event.target.closest(".block-row");
+      if (row) {
+        const block = (file.blocks || []).find((entry) => entry.id === row.dataset.blockId);
+        if (block) highlightBlock(block);
+      }
+    });
+    review.addEventListener("mouseout", (event) => {
+      if (event.relatedTarget && review.contains(event.relatedTarget)) return;
+      clearCodeHit();
+    });
+  }
+
+  function updateReviewHeader(file) {
+    const meta = document.getElementById("review-meta");
+    if (!meta) return;
+    const count = (file.findings || []).filter((finding) => finding.severity !== "praise").length;
+    meta.innerHTML = `<span>${fmtInt(count)} findings</span><span class="sep">·</span><span>${fmtInt(file.totalBlocks)} blocks</span><span class="sep">·</span><span>${fmtInt(file.coveragePct)}%</span>`;
+  }
+
+  /* ------------------------------------------------------------ code pane */
+  async function loadDiffLib() {
+    if (state.libPromise) return state.libPromise;
+    if (window.PierreDiffs?.File && window.PierreDiffs?.FileDiff) {
+      state.libPromise = Promise.resolve(window.PierreDiffs);
+      return state.libPromise;
+    }
+    throw new Error("The local code renderer did not load. Re-run install or open the review through the skill server.");
+  }
+
+  async function mountCode(file, mode) {
+    const host = document.getElementById("code-mount");
+    const scroll = document.getElementById("code-scroll");
+    if (!host || !scroll) return;
+    if (!file.content) {
+      host.innerHTML = `<div class="code-state"><div class="state-icon">${icon(file.binary ? "file" : "code", 18)}</div><h3>${file.binary ? "Binary file" : "Content omitted"}</h3><p>${file.binary ? "No text to show. Read the file note on the right." : "This file is larger than the review snapshot limit."}</p></div>`;
+      state.code = null;
+      return;
+    }
+    host.innerHTML = `<div class="code-loading"><div><div class="loader"></div>Loading code</div></div>`;
+    state.code = { file, mode, instance: null, host, scroll, root: null, rows: [], onScroll: null };
+    try {
+      const lib = await loadDiffLib();
+      if (!document.getElementById("code-mount") || state.route?.file !== file.path) return;
+      host.innerHTML = "";
+      const options = {
+        theme: { light: "github-light", dark: "github-dark" },
+        themeType: state.theme,
+        overflow: "wrap",
+        disableFileHeader: true,
+        lineHoverHighlight: "line",
+        onLineClick: ({ lineNumber, lineType }) => {
+          if (state.annotate) return;
+          const side = String(lineType || "").includes("deletion") ? "old" : "new";
+          const block = findBlockForLine(file, lineNumber, side);
+          if (block) {
+            setActiveBlock(block.id);
+            const row = document.getElementById(`block-${safeId(block.id)}`) || document.querySelector(`.block-row[data-block-id="${CSS.escape(block.id)}"]`);
+            row?.scrollIntoView({ block: "nearest" });
+            highlightBlock(block, true);
+          }
+        },
+        onPostRender: () => setupCodeRoot(file).catch(() => {}),
+      };
+      if (mode === "file") {
+        const contents = file.status === "deleted" ? (file.content.old || "") : (file.content.new || "");
+        const instance = new lib.File(options);
+        instance.render({ containerWrapper: host, file: { name: file.path, contents } });
+        state.code.instance = instance;
+      } else {
+        const instance = new lib.FileDiff({ ...options, diffStyle: "unified", expandUnchanged: true });
+        instance.render({
+          containerWrapper: host,
+          oldFile: { name: file.oldPath || file.path, contents: file.content.old || "" },
+          newFile: { name: file.path, contents: file.content.new || "" },
+        });
+        state.code.instance = instance;
+      }
+      setupCodeRoot(file).catch(() => {});
+    } catch (error) {
+      host.innerHTML = `<div class="code-fallback"><strong>Code view is not available.</strong><div>${esc(error.message || error)}</div><pre>${esc((file.content.new || file.content.old || "").split("\n").slice(0, 500).join("\n"))}</pre></div>`;
+    }
+  }
+
+  async function setupCodeRoot(file, attempt = 0) {
+    const code = state.code;
+    if (!code || attempt > 60) return;
+    const host = code.host.querySelector("diffs-container");
+    const root = host?.shadowRoot || host;
+    if (!root || !root.querySelector("[data-line]")) {
+      await sleep(80);
+      if (state.code !== code || state.route?.file !== file.path) return;
+      return setupCodeRoot(file, attempt + 1);
+    }
+    code.root = root;
+    code.rows = [...root.querySelectorAll("[data-line]")];
+    if (!root.__reviewBound) {
+      root.__reviewBound = true;
+      const style = document.createElement("style");
+      style.textContent = `
+        [data-review-hit="true"] { box-shadow: inset 3px 0 0 var(--accent, #c8f45a) !important; background-color: color-mix(in srgb, var(--accent, #c8f45a) 9%, transparent) !important; }
+        :host-context(html[data-annotate="on"]) [data-line] { cursor: crosshair; }
+        :host-context(html[data-annotate="on"]) [data-line]:hover { outline: 1px dashed var(--accent, #c8f45a); outline-offset: -1px; }
+      `;
+      root.appendChild(style);
+      root.addEventListener("click", (event) => {
+        if (!state.annotate) return;
+        const row = event.target.closest?.("[data-line]");
+        if (!row) return;
+        event.preventDefault();
+        event.stopPropagation();
+        openLineAnnotate(file, row);
+      }, true);
+      root.addEventListener("mouseup", () => {
+        if (!state.annotate) return;
+        setTimeout(() => {
+          const selection = window.getSelection?.();
+          const text = selection?.toString().trim() || "";
+          if (text.length < 2) return;
+          openAnnotate({ kind: "text", file: file.path, excerpt: text.slice(0, 800), label: "Selected code" });
+          selection.removeAllRanges();
+        }, 0);
+      });
+    }
+    bindCodeScroll(code);
+    if (state.route?.finding) {
+      const finding = FINDING_MAP.get(state.route.finding);
+      if (finding?.file === file.path) setTimeout(() => scrollToFinding(finding.id, true), 80);
+    }
+  }
+
+  function bindCodeScroll(code) {
+    if (!code.scroll) return;
+    if (code.onScroll) code.scroll.removeEventListener("scroll", code.onScroll);
+    let raf = 0;
+    code.onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        updateActiveFromScroll(code);
+      });
+    };
+    code.scroll.addEventListener("scroll", code.onScroll, { passive: true });
+  }
+
+  function updateActiveFromScroll(code) {
+    if (!code.root || !code.rows.length) return;
+    const top = code.scroll.getBoundingClientRect().top + 6;
+    let candidate = null;
+    for (const row of code.rows) {
+      if (row.getBoundingClientRect().bottom > top) { candidate = row; break; }
+    }
+    if (!candidate) return;
+    const line = Number(candidate.getAttribute("data-line"));
+    const type = candidate.getAttribute("data-line-type") || "";
+    const side = type.includes("deletion") ? "old" : "new";
+    const block = findBlockForLine(code.file, line, side);
+    if (block) setActiveBlock(block.id);
+  }
+
+  function findBlockForLine(file, line, side) {
+    const blocks = file.blocks || [];
+    if (side === "old") {
+      return blocks.find((block) => {
+        const start = block.side === "old" ? block.startLine : block.oldStart;
+        const end = block.side === "old" ? block.endLine : block.oldEnd;
+        return line >= start && line <= end;
+      }) || blocks.find((block) => line >= block.startLine && line <= block.endLine);
+    }
+    return blocks.find((block) => line >= block.startLine && line <= block.endLine);
+  }
+
+  function clearCodeHit() {
+    state.code?.root?.querySelectorAll('[data-review-hit="true"]').forEach((row) => row.removeAttribute("data-review-hit"));
+  }
+
+  function applyHit(start, end, side) {
+    const root = state.code?.root;
+    if (!root) return;
+    clearCodeHit();
+    if (!Number.isFinite(start) || !Number.isFinite(end)) return;
+    for (const row of root.querySelectorAll("[data-line]")) {
+      const line = Number(row.getAttribute("data-line"));
+      const type = row.getAttribute("data-line-type") || "";
+      const relevant = side === "old" ? !type.includes("addition") : !type.includes("deletion");
+      if (relevant && line >= start && line <= end) row.setAttribute("data-review-hit", "true");
+    }
+  }
+
+  function highlightFinding(finding) {
+    if (!finding) return;
+    applyHit(finding.startLine, finding.endLine || finding.startLine, finding.side || "new");
+    if (finding.blockId) setActiveBlock(finding.blockId);
+  }
+
+  function highlightBlock(block, flash = false) {
+    if (!block) return;
+    applyHit(block.startLine, block.endLine, block.side || "new");
+    if (flash) setTimeout(clearCodeHit, 1200);
+  }
+
+  function setActiveBlock(id) {
+    state.activeBlock = id;
+    document.querySelectorAll(".block-row.is-active").forEach((row) => row.classList.remove("is-active"));
+    document.querySelectorAll(".block-row").forEach((row) => {
+      if (row.dataset.blockId === id) row.classList.add("is-active");
+    });
+  }
+
+  function scrollToLine(line, side = "new") {
+    const code = state.code;
+    if (!code?.root || !line) return;
+    const rows = [...code.root.querySelectorAll(`[data-line="${Number(line)}"]`)];
+    const rank = (row) => {
+      const type = row.getAttribute("data-line-type") || "";
+      if (side === "old") return type.includes("deletion") ? 0 : type.includes("addition") ? 2 : 1;
+      return type.includes("deletion") ? 2 : type.includes("addition") ? 0 : 1;
+    };
+    rows.sort((a, b) => rank(a) - rank(b))[0]?.scrollIntoView({ block: "center", behavior: REDUCED ? "auto" : "smooth" });
+  }
+
+  function scrollToFinding(id, focus = false) {
+    const finding = FINDING_MAP.get(id);
+    if (!finding) return;
+    if (finding.file !== state.route?.file) navigate("file", finding.file, finding.id);
+    scrollToLine(finding.startLine, finding.side || "new");
+    highlightFinding(finding);
+    if (focus) document.getElementById(`finding-${safeId(finding.id)}`)?.scrollIntoView({ block: "nearest" });
+  }
+
+  /* --------------------------------------------------------------- notes */
+  function anchorForFinding(finding) {
+    return { kind: "finding", file: finding.file, findingId: finding.id, line: finding.startLine, lineEnd: finding.endLine, side: finding.side || "new", label: finding.title, excerpt: finding.title };
+  }
+  function anchorForBlock(file, block) {
+    return { kind: "block", file: file.path, blockId: block.id, line: block.startLine, lineEnd: block.endLine, side: block.side || "new", label: `Block ${block.id}`, excerpt: block.assessmentSummary || "" };
+  }
+  function anchorForFlow(node) {
+    return { kind: "flow", nodeId: node.id, label: node.label, excerpt: node.detail || "" };
+  }
+  function anchorLabel(anchor) {
+    if (!anchor) return "Note";
+    if (anchor.kind === "message") return "Message";
+    const parts = [];
+    if (anchor.file) parts.push(anchor.line ? `${anchor.file}:${anchor.line}` : anchor.file);
+    if (anchor.findingId) parts.push(anchor.findingId);
+    if (anchor.blockId) parts.push(anchor.blockId);
+    if (!parts.length && anchor.label) parts.push(anchor.label);
+    return parts.join(" · ") || anchor.kind || "Note";
+  }
+  function anchorForElement(el) {
+    const findingEl = el.closest("[data-finding-id]");
+    if (findingEl) {
+      const finding = FINDING_MAP.get(findingEl.dataset.findingId);
+      if (finding) return anchorForFinding(finding);
+    }
+    const blockEl = el.closest("[data-block-id]");
+    if (blockEl && state.route?.view === "file") {
+      const file = FILE_MAP.get(state.route.file);
+      const block = (file?.blocks || []).find((entry) => entry.id === blockEl.dataset.blockId);
+      if (block) return anchorForBlock(file, block);
+    }
+    const nodeEl = el.closest(".flow-node");
+    if (nodeEl) {
+      const node = (DATA.flow?.nodes || []).find((entry) => entry.id === nodeEl.dataset.nodeId);
+      if (node) return anchorForFlow(node);
+    }
+    if (state.route?.view === "file") {
+      return { kind: "text", file: state.route.file, label: el.classList?.contains("agent-summary") ? "File summary" : "Element", excerpt: (el.innerText || "").trim().slice(0, 600) };
+    }
+    return { kind: "element", label: el.tagName?.toLowerCase() || "element", excerpt: (el.innerText || "").trim().slice(0, 600) };
+  }
+
+  function openAnnotate(anchor) {
+    state.currentAnchor = anchor;
+    const dialog = document.getElementById("note-dialog");
+    if (!dialog) return;
+    document.getElementById("note-anchor").textContent = anchorLabel(anchor);
+    const text = document.getElementById("note-text");
+    text.value = "";
+    if (!dialog.open) dialog.showModal();
+    setTimeout(() => text.focus(), 30);
+  }
+
+  function openLineAnnotate(file, row) {
+    const line = Number(row.getAttribute("data-line"));
+    const type = row.getAttribute("data-line-type") || "";
+    const side = type.includes("deletion") ? "old" : "new";
+    const block = findBlockForLine(file, line, side);
+    openAnnotate({
+      kind: "line",
+      file: file.path,
+      line,
+      side,
+      blockId: block?.id,
+      label: `Line ${line}`,
+      excerpt: (row.textContent || "").trim().slice(0, 600),
+    });
+  }
+
+  function queueNote() {
+    const text = document.getElementById("note-text").value.trim();
+    if (!text) { toast("Write a note first."); return; }
+    state.drafts.push({
+      id: `local-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
+      text,
+      anchor: state.currentAnchor || { kind: "message" },
+      createdAt: new Date().toISOString(),
+    });
+    saveDrafts();
+    updateNotesCount();
+    document.getElementById("note-dialog").close();
+    toast("Note queued. Open Notes to send.");
+  }
+
+  function removeDraft(id) {
+    state.drafts = state.drafts.filter((draft) => draft.id !== id);
+    saveDrafts();
+    updateNotesCount();
+    renderNotesDrawer({ preserve: false });
+  }
+
+  function toggleNotes(force) {
+    const drawer = document.getElementById("notes-drawer");
+    if (!drawer) return;
+    state.notesOpen = force === undefined ? !state.notesOpen : force;
+    drawer.hidden = !state.notesOpen;
+    if (state.notesOpen) {
+      renderNotesDrawer({ preserve: false });
+      pollState({ quiet: true });
+    }
+  }
+
+  function renderNotesDrawer({ preserve = true } = {}) {
+    const drawer = document.getElementById("notes-drawer");
+    if (!drawer || !state.notesOpen) return;
+    const oldScroll = drawer.querySelector(".notes-body")?.scrollTop || 0;
+    const status = agentStatus();
+    const session = state.server.session;
+    const serverNotes = (session?.notes || []).slice().reverse();
+    const activeNotes = serverNotes.filter((note) => note.status !== "done");
+    const doneNotes = serverNotes.filter((note) => note.status === "done").slice(0, 8);
+    const replies = (session?.replies || []).slice().reverse();
+    const canSend = state.server.connected && !session?.closed;
+    const offline = !state.server.connected;
+    const canSubmit = canSend && state.drafts.length > 0;
+    drawer.innerHTML = `
+      <div class="notes-head"><h2>Notes</h2><button class="btn sm" id="notes-new-message">+ Message</button><button class="icon-btn notes-close" data-close-notes aria-label="Close notes">${icon("x", 13)}</button></div>
+      <div class="notes-status"><span class="agent-dot ${status.className}"></span><span>${esc(status.label)}</span>${session?.closed ? `<span style="margin-left:auto">Session closed</span>` : ""}</div>
+      <div class="notes-body">
+        ${state.drafts.length ? `<section class="notes-section"><div class="notes-section-head">Queued <span class="count">${state.drafts.length}</span></div>${state.drafts.map((draft) => `<div class="note-card"><div class="note-anchor">${esc(anchorLabel(draft.anchor))}</div><div class="note-text">${esc(draft.text)}</div><div class="note-actions"><button class="btn sm danger" data-remove-draft="${esc(draft.id)}">Remove</button><span class="note-status">queued</span></div></div>`).join("")}</section>` : `<div class="notes-empty">No queued notes. Click Annotate. Then click code or a finding.</div>`}
+        ${offline ? `<div class="notes-empty">Preview only. Run <code>open</code> in the repository to start the review server.</div>` : ""}
+        ${activeNotes.length ? `<section class="notes-section"><div class="notes-section-head">Open notes <span class="count">${activeNotes.length}</span></div>${activeNotes.map((note) => `<div class="note-card is-${esc(note.status)}"><div class="note-anchor">${esc(anchorLabel(note.anchor))}</div><div class="note-text">${esc(note.text)}</div><div class="note-actions"><span class="note-status">${esc(note.status)}</span></div></div>`).join("")}</section>` : ""}
+        ${doneNotes.length ? `<details class="coverage-details"><summary>Closed notes (${doneNotes.length})</summary>${doneNotes.map((note) => `<div class="note-card is-done"><div class="note-anchor">${esc(anchorLabel(note.anchor))}</div><div class="note-text">${esc(note.text)}</div><div class="note-actions"><span class="note-status">done</span></div></div>`).join("")}</details>` : ""}
+        ${replies.length ? `<section class="notes-section"><div class="notes-section-head">Agent replies</div>${replies.map((reply) => `<div class="reply-card"><div class="reply-meta">${esc(fmtDate(reply.createdAt))} ? ${esc(reply.id)}</div><div class="reply-text">${esc(reply.text)}</div></div>`).join("")}</section>` : ""}
+      </div>
+      <div class="notes-foot">
+        ${offline ? `<span class="offline">Copy the notes and paste them into the agent chat.</span><button class="btn" id="notes-copy">Copy feedback</button>` : `<button class="btn btn-primary" id="notes-send"${canSubmit ? "" : " disabled"}>Send to agent</button>`}
+        <button class="btn" id="notes-close">Close</button>
+        <button class="btn danger" id="notes-end" title="Stop the review server">End</button>
+      </div>`;
+    drawer.querySelector("[data-close-notes]")?.addEventListener("click", () => toggleNotes(false));
+    drawer.querySelector("#notes-close")?.addEventListener("click", () => toggleNotes(false));
+    drawer.querySelector("#notes-end")?.addEventListener("click", closeReview);
+    drawer.querySelector("#notes-new-message")?.addEventListener("click", () => openAnnotate({ kind: "message" }));
+    drawer.querySelectorAll("[data-remove-draft]").forEach((button) => button.addEventListener("click", () => removeDraft(button.dataset.removeDraft)));
+    drawer.querySelector("#notes-send")?.addEventListener("click", sendFeedback);
+    drawer.querySelector("#notes-copy")?.addEventListener("click", () => copyFeedback());
+    const body = drawer.querySelector(".notes-body");
+    if (body) body.scrollTop = preserve ? oldScroll : 0;
+  }
+
+  function copyText(text) {
+    const value = String(text || "");
+    const done = () => toast("Copied.");
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(value).then(done).catch(() => fallbackCopy(value, done));
+    } else fallbackCopy(value, done);
+  }
+  function fallbackCopy(value, done) {
+    const area = document.createElement("textarea");
+    area.value = value;
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand("copy"); done(); } catch { toast("Could not copy."); }
+    area.remove();
+  }
+
+  function toast(message) {
+    const el = document.getElementById("toast");
+    if (!el) return;
+    el.textContent = message;
+    el.classList.add("is-visible");
+    clearTimeout(state.toastTimer);
+    state.toastTimer = setTimeout(() => el.classList.remove("is-visible"), 2200);
+  }
+
+  /* ------------------------------------------------------------- events */
+  function bindGlobal() {
+    document.getElementById("theme-btn")?.addEventListener("click", toggleTheme);
+    document.getElementById("notes-btn")?.addEventListener("click", () => toggleNotes());
+    document.getElementById("annotate-btn")?.addEventListener("click", () => setAnnotate(!state.annotate));
+    document.getElementById("help-btn")?.addEventListener("click", () => document.getElementById("help-dialog")?.showModal());
+    document.querySelectorAll("[data-close-dialog]").forEach((button) => button.addEventListener("click", () => button.closest("dialog")?.close()));
+    document.querySelectorAll("[data-close-note]").forEach((button) => button.addEventListener("click", () => document.getElementById("note-dialog")?.close()));
+    document.getElementById("note-save")?.addEventListener("click", queueNote);
+    document.getElementById("reload-btn")?.addEventListener("click", () => location.reload());
+    document.getElementById("help-dialog")?.addEventListener("click", (event) => {
+      if (event.target === event.currentTarget) event.currentTarget.close();
+    });
+    document.getElementById("note-dialog")?.addEventListener("click", (event) => {
+      if (event.target === event.currentTarget) event.currentTarget.close();
+    });
+    document.addEventListener("click", handleDocumentClick, true);
+    document.addEventListener("mouseup", handleSelection, true);
+    window.addEventListener("keydown", (event) => {
+      const tag = event.target?.tagName?.toLowerCase();
+      if (["input", "textarea", "select"].includes(tag)) return;
+      if (event.key === "?" && !document.getElementById("help-dialog")?.open) {
+        event.preventDefault();
+        document.getElementById("help-dialog")?.showModal();
+      }
+      if (event.key === "Escape") {
+        if (state.notesOpen) { toggleNotes(false); return; }
+        if (state.annotate) setAnnotate(false);
+      }
+      if (event.altKey && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
+        const files = DATA.files || [];
+        if (!files.length) return;
+        event.preventDefault();
+        const current = state.route?.file ? files.findIndex((file) => file.path === state.route.file) : -1;
+        const next = event.key === "ArrowDown" ? Math.min(files.length - 1, current + 1) : Math.max(0, current - 1);
+        navigate("file", files[next].path);
+      }
+    });
+    window.addEventListener("hashchange", renderRoute);
+    document.addEventListener("click", (event) => {
+      const openFile = event.target.closest("[data-open-file]");
+      if (openFile && openFile.dataset.openFile) {
+        event.preventDefault();
+        navigate("file", openFile.dataset.openFile);
+        return;
+      }
+      const openFinding = event.target.closest("[data-open-finding]");
+      if (openFinding) {
+        event.preventDefault();
+        navigate("file", openFinding.dataset.file, openFinding.dataset.openFinding);
+        return;
+      }
+      const openArtifact = event.target.closest("[data-open-artifact]");
+      if (openArtifact) {
+        event.preventDefault();
+        const tokenQuery = state.server.token ? `?token=${encodeURIComponent(state.server.token)}` : "";
+        window.open(`${DATA.artifactBase}${openArtifact.dataset.openArtifact}/review.html${tokenQuery}`, "_blank", "noopener");
+        return;
+      }
+      const copyPath = event.target.closest("[data-copy-path]");
+      if (copyPath) {
+        event.preventDefault();
+        copyText(copyPath.dataset.copyPath);
+      }
+    });
+  }
+
+  function setAnnotate(on) {
+    state.annotate = Boolean(on);
+    document.documentElement.dataset.annotate = state.annotate ? "on" : "off";
+    const button = document.getElementById("annotate-btn");
+    if (button) button.setAttribute("aria-pressed", state.annotate ? "true" : "false");
+    toast(state.annotate ? "Annotate on. Click code or a finding." : "Annotate off.");
+  }
+
+  function handleDocumentClick(event) {
+    if (!state.annotate) return;
+    if (event.target.closest("button, a, input, textarea, select, label, .sidebar, .topbar, .statusbar, .notes-drawer, .dialog, .reload-bar")) return;
+    const target = event.target.closest(".finding-row, .block-row, .agent-summary, .top-finding, .flow-node, .file-title, .card-head, .review-section-head");
+    if (!target) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openAnnotate(anchorForElement(target));
+  }
+
+  function handleSelection(event) {
+    if (!state.annotate) return;
+    if (event.target.closest("button, a, input, textarea, select, .notes-drawer, .dialog, .code-panel, .topbar, .statusbar, .sidebar")) return;
+    setTimeout(() => {
+      const selection = window.getSelection?.();
+      const text = selection?.toString().trim() || "";
+      if (text.length < 2) return;
+      const anchor = anchorForElement(event.target);
+      openAnnotate({ ...anchor, kind: "text", excerpt: text.slice(0, 800), label: "Selected text" });
+      selection.removeAllRanges();
+    }, 0);
+  }
+
+  function bindOverview() {
+    document.querySelectorAll("[data-top-finding]").forEach((row) => {
+      row.addEventListener("click", (event) => {
+        if (state.annotate) return;
+        if (event.target.closest("button")) return;
+        navigate("file", row.dataset.file, row.dataset.findingId);
+      });
+    });
+    document.querySelectorAll(".flow-node").forEach((node) => {
+      node.addEventListener("mouseenter", () => {
+        const id = node.dataset.nodeId;
+        document.querySelectorAll(".flow-node").forEach((item) => item.classList.toggle("is-hot", item === node));
+      });
+      node.addEventListener("mouseleave", () => document.querySelectorAll(".flow-node").forEach((item) => item.classList.remove("is-hot")));
+    });
+  }
+
+  function animateCounts() {
+    // Numbers settle immediately. This keeps screenshots and reviews stable.
+  }
+
+  function init() {
+    renderChrome();
+    bindGlobal();
+    renderRoute();
+    if (state.server.token) {
+      pollState({ quiet: true });
+      startPolling();
+    }
+    updateNotesCount();
+  }
+
+  init();
+}
+
+</script>
+</body>
+</html>

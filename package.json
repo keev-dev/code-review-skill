@@ -1,0 +1,24 @@
+{
+  "name": "code-review-skill",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "Visual, line-by-line code review skill for coding agents.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node tests/selftest.mjs",
+    "demo": "node tests/demo.mjs",
+    "visual": "node tests/visual.mjs",
+    "visual:edge": "node tests/visual-edge.mjs",
+    "feedback": "node tests/feedback-test.mjs",
+    "install:local": "node scripts/install.mjs",
+    "install:global": "node scripts/install.mjs --global",
+    "install:skill": "node scripts/install.mjs --global"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.64.1"
+  }
+}
